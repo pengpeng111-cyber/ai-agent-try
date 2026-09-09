@@ -1,34 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 40 820 460" width="820" height="460" style="background:#ffffff">
-<defs><marker id="ah" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#333333"/></marker><marker id="ah-light" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#999999"/></marker></defs>
-<rect x="80" y="60" width="500" height="380" rx="8" fill="#ffffff" stroke="#333333" stroke-width="2" stroke-dasharray="8,4"/>
-<text x="330" y="82" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="bold">while not done:</text>
-<rect x="120" y="100" width="420" height="60" rx="6" fill="#e8e8e8" stroke="#333333" stroke-width="2"/>
-<text x="130" y="115" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="bold">① Размышление (Reasoning)</text>
-<rect x="130" y="125" width="400" height="28" rx="4" fill="#f5f5f5" stroke="#333333" stroke-width="2"/>
-<text x="140" y="140" font-family="'Courier New', Courier, monospace" font-size="7.5" fill="#333333" text-anchor="start" dominant-baseline="central">"Анализ результатов поиска...недостаточно информации, нужен дополнительный поиск"</text>
-<rect x="120" y="175" width="420" height="60" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
-<text x="130" y="190" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="bold">② Действие (Acting)</text>
-<rect x="130" y="200" width="400" height="28" rx="4" fill="#f5f5f5" stroke="#333333" stroke-width="2"/>
-<text x="140" y="215" font-family="'Courier New', Courier, monospace" font-size="13.5" fill="#333333" text-anchor="start" dominant-baseline="central">web_search(&quot;Agent RL training techniques 2025&quot;)</text>
-<line x1="330" y1="162" x2="330" y2="173" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
-<rect x="120" y="250" width="420" height="60" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
-<text x="130" y="265" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="bold">③ Наблюдение</text>
-<rect x="130" y="275" width="400" height="28" rx="4" fill="#f5f5f5" stroke="#333333" stroke-width="2"/>
-<text x="140" y="290" font-family="'Courier New', Courier, monospace" font-size="13.5" fill="#333333" text-anchor="start" dominant-baseline="central">tool_result: "Найдено 3 релевантные статьи..."</text>
-<line x1="330" y1="237" x2="330" y2="248" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
-<path d="M 540,280 Q 500.0,200.0 540,120" fill="none" stroke="#999999" stroke-width="2" marker-end="url(#ah-light)"/>
-<text x="520.0" y="190.0" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="5.5" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">Продолжить цикл</text>
-<rect x="610" y="60" width="190" height="190" rx="8" fill="#ffffff" stroke="#333333" stroke-width="2" stroke-dasharray="8,4"/>
-<text x="622" y="78" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="start" dominant-baseline="central" font-weight="bold">Условия выхода</text>
-<text x="620" y="100" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">① Задача выполнена</text>
-<text x="620" y="132" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">② Вызов final_answer</text>
-<text x="620" y="164" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="9.5" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">③ Вызов инструмента не возвращён</text>
-<text x="620" y="196" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="7.5" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">④ Достигнуто максимальное число раундов</text>
-<text x="620" y="228" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12.5" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">⑤ Превышено число ошибок</text>
-<rect x="80" y="360" width="500" height="70" rx="6" fill="#d0d0d0" stroke="#333333" stroke-width="2"/>
-<text x="330" y="380" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="bold">Пример практического выполнения: исправление кода SWE-bench</text>
-<text x="330" y="405" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="7" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Поиск кода → Обнаружение бага → Правка файла → Запуск тестов → Исправление ошибок → Правка снова → Тесты пройдены → Готово</text>
-<text x="330" y="425" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">(5 раундов итераций, 12 вызовов инструментов)</text>
-<line x1="330" y1="312" x2="330" y2="358" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
-<text x="330.0" y="325.0" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="middle">done = True</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 40 820 530" width="820" height="530" style="background:#ffffff">
+<title>Рис. 1-5 Архитектура «модель как агент» — врождённый вызов инструментов</title>
+<desc>LLM вызывает врождённые инструменты вроде web_search и code_interpreter в замкнутом цикле, который выполняет серверный Harness. Ввод пользователя и итоговый вывод находятся вне этого цикла; внутри него мысль, действие и наблюдение образуют цикл ReAct.</desc>
+<defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#333333"/></marker><marker id="ah-light" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#999999"/></marker></defs>
+
+<rect x="260" y="70" width="300" height="100" rx="6" fill="#d0d0d0" stroke="#333333" stroke-width="2"/>
+<text x="410" y="100" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="bold">LLM (Kimi K3 / GPT-5.6)</text>
+<text x="410" y="130" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">Нативные способности агента после RL-обучения</text>
+
+<rect x="620" y="70" width="180" height="230" rx="8" fill="none" stroke="#333333" stroke-width="2" stroke-dasharray="8,4"/>
+<text x="632" y="88" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12.5" fill="#666666" text-anchor="start" dominant-baseline="central" font-weight="bold">Нативные инструменты</text>
+<rect x="635" y="105" width="150" height="50" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
+<text x="710" y="130" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">web_search</text>
+<rect x="635" y="170" width="150" height="50" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
+<text x="710" y="195" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">code_interpreter</text>
+<rect x="635" y="235" width="150" height="50" rx="6" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+<text x="710" y="260" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="12" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Другие инструменты...</text>
+<line x1="560" y1="120" x2="633" y2="130" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="633" y1="195" x2="560" y2="145" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<path d="M 570,308 Q 600,240 548,172" fill="none" stroke="#999999" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#ah-light)"/>
+<text x="568" y="250" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#666666" text-anchor="end" dominant-baseline="central" font-weight="bold">Сигнал RL-обучения</text>
+
+<rect x="25" y="235" width="230" height="55" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
+<text x="140" y="252.9" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13.5" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Пользователь: найди динамику</text>
+<text x="140" y="273.7" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13.5" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">биткоина за последний месяц</text>
+
+<rect x="15" y="310" width="790" height="170" rx="8" fill="none" stroke="#333333" stroke-width="2" stroke-dasharray="8,4"/>
+<text x="410" y="328" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="bold">Цикл ReAct (замкнутое выполнение серверным Harness)</text>
+
+<line x1="140" y1="292" x2="140" y2="380" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<text x="440" y="350" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">переходим к следующему кругу с наблюдением</text>
+<path d="M 680,382 L 680,366 L 200,366 L 200,382" fill="none" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<rect x="40" y="384" width="200" height="76" rx="6" fill="#e8e8e8" stroke="#333333" stroke-width="2"/>
+<text x="140" y="412" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Мысль: нужны данные в реальном</text>
+<text x="140" y="433" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">времени, затем анализ кодом</text>
+<line x1="242" y1="422" x2="298" y2="422" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<rect x="300" y="384" width="220" height="76" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
+<text x="410" y="404" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Круг 1: вызов web_search</text>
+<text x="410" y="424" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">&quot;BTC price last month&quot;</text>
+<text x="410" y="444" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">Круг 2: code_interpreter</text>
+<line x1="522" y1="422" x2="578" y2="422" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<rect x="580" y="384" width="200" height="76" rx="6" fill="#e8e8e8" stroke="#333333" stroke-width="2"/>
+<text x="680" y="412" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Результат: [данные о цене]</text>
+<text x="680" y="433" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">$67,230 → $71,450</text>
+
+<line x1="140" y1="462" x2="140" y2="496" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="25" y="500" width="230" height="55" rx="6" fill="#d0d0d0" stroke="#333333" stroke-width="2"/>
+<text x="140" y="517.9" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15.5" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Итог: отчёт технического</text>
+<text x="140" y="538.7" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15.5" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">анализа + график</text>
+
+<rect x="15" y="70" width="230" height="120" rx="8" fill="none" stroke="#333333" stroke-width="2" stroke-dasharray="8,4"/>
+<text x="27" y="80.8" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#666666" text-anchor="start" dominant-baseline="central" font-weight="bold">Отличия от традиционных</text>
+<text x="27" y="95.2" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#666666" text-anchor="start" dominant-baseline="central" font-weight="bold">фреймворков</text>
+<text x="30" y="109.4" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">✓ Оркестрацию ведёт серверный</text>
+<text x="30" y="123.7" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">Harness</text>
+<text x="30" y="143" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">✓ Клиенту не нужно писать цикл</text>
+<text x="30" y="157.3" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">ReAct</text>
+<text x="30" y="176.6" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">✓ Модель сама решает, что вызвать</text>
 </svg>

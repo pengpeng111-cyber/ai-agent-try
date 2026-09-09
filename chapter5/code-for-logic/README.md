@@ -5,6 +5,21 @@
 
 ← [Chapter 5 index / 返回第 5 章目录](../README.md)
 
+## Formal manuscript result (canonical)
+
+The canonical run uses the pinned revision of
+`K-and-K/perturbed-knights-and-knaves`, stratified across six perturbations and
+2–8 people (84 paired tasks). Every code trajectory invoked
+`python-constraint`, but observed accuracy was 39.3% for code assistance versus
+75.0% for pure reasoning (p=2.27e-7 in the opposite direction). The campaign is
+complete; the manuscript's >90% and significant-improvement hypothesis was not
+observed. Evidence: [`validation/real_ark_doubao_flash_hf84_20260730.json`](validation/real_ark_doubao_flash_hf84_20260730.json).
+
+正式活动固定 K&K 数据集版本，按六类扰动与 2–8 人规模分层抽取 84 道配对题。代码臂
+每题都调用了 `python-constraint`，但实测准确率为 39.3%，低于纯思考的 75.0%
+（p=2.27e-7，方向与预期相反）。因此下文离线求解器 100% 的表格只能证明确定性 CSP
+机制正确，不能替代真实 LLM 对照或正文的 >90% 验收结论。
+
 ---
 
 ## English
@@ -45,7 +60,22 @@ i.e. `X == (semantic truth of that statement)`. Hand this to a deterministic sol
 ### Quick start
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 5 environment
+uv sync --locked --python 3.12 --extra ch5
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/code-for-logic
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
 ```
 
 #### 1) Offline solver baseline (no API key; recommended first)
@@ -61,7 +91,7 @@ Fully offline and deterministic; demonstrates “puzzle → constraints → solv
 
 ```bash
 cp env.example .env        # then edit .env with OPENAI_API_KEY
-# or: export OPENAI_API_KEY=sk-...
+# or: export OPENAI_API_KEY=your-openai-api-key
 
 python demo.py             # default both: pure vs code, all 12
 python demo.py --mode pure # pure baseline only
@@ -218,7 +248,22 @@ X 是骑士(True)  <=>  X 说的那句话为真
 ### 快速开始
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 5 章环境
+uv sync --locked --python 3.12 --extra ch5
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.\.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/code-for-logic
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
 ```
 
 #### 1) 离线约束求解基线（不需要 API Key，推荐先跑）
@@ -234,7 +279,7 @@ python demo.py --mode solver --min-people 4   # 只跑 >=4 人的难题
 
 ```bash
 cp env.example .env        # 然后编辑 .env 填入 OPENAI_API_KEY
-# 或直接 export OPENAI_API_KEY=sk-...
+# 或直接 export OPENAI_API_KEY=your-openai-api-key
 
 python demo.py             # 默认 both：纯思考 vs 代码辅助，全部 12 题
 python demo.py --mode pure # 只跑纯思考基线

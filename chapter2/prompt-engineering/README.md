@@ -44,8 +44,22 @@ Uses a pre-generated chaotic `wiki.md`:
 ### Installation
 
 ```bash
+# From the repository root: use the shared Chapter 2 environment
+uv sync --locked --python 3.12 --extra ch2
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch2]"
+
 cd chapter2/prompt-engineering
-pip install -r requirements.txt
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
 ```
 
 (Older docs may mention `projects/week2/prompt-engineering`; use this repo path.)
@@ -56,19 +70,44 @@ All entry scripts have Chinese `--help`: `python run_ablation.py --help`, `pytho
 
 #### One-shot full ablation + comparison table (recommended)
 
-`--all` runs baseline + each single-axis ablation + all combined in one process, prints a success-rate table, and writes summary stats to `--output` (default `log-dir/ablation_summary_<timestamp>.json`). Best way to reproduce book 实验 2-4:
+`--all` runs baseline + each single-axis ablation + all combined in one process, prints a success-rate table, and writes summary stats to `--output`. The frozen canonical protocol uses official Moonshot Kimi K3 for both the action model and user simulator, six arms, and the same ten τ-bench airline tasks in every arm:
 
 ```bash
+export OPENAI_API_KEY="$MOONSHOT_API_KEY"
+export OPENAI_API_BASE="https://api.moonshot.cn/v1"
 python run_ablation.py \
-    --model gpt-5.6-luna \
-    --env airline \
-    --end-index 10 \
-    --all
-# Default: OpenAI direct (provider=openai) → set OPENAI_API_KEY.
-# OpenRouter: use a slashed model id (e.g. openai/gpt-5) → openrouter + OPENROUTER_API_KEY.
-# Fallback: bare id (e.g. gpt-4o-mini) with no OPENAI_API_KEY but OPENROUTER_API_KEY set
-#           is rewritten to openai/gpt-4o-mini and routed via openrouter.
+  --all --model kimi-k3 --user-model kimi-k3 \
+  --model-provider openai --user-model-provider openai --temperature 1 \
+  --env airline --task-ids 0 1 2 3 4 5 6 7 8 9 \
+  --num-trials 1 --seed 20260730 --max-agent-steps 30 \
+  --max-concurrency 2 \
+  --log-dir runs/exp2-4-kimi-k3-YYYYMMDD-v1 \
+  --output runs/exp2-4-kimi-k3-YYYYMMDD-v1/comparison.json \
+  --no-verbose
 ```
+
+If a campaign stops, resume into a new evidence directory. The runner imports
+only prior task rows with nonempty provider response IDs/usage and no task
+error, records the source hash, and never regenerates them:
+
+```bash
+# Repeat every frozen option above, change --log-dir/--output to ...-v2, and add:
+--resume-from runs/exp2-4-kimi-k3-YYYYMMDD-v1
+```
+
+The rejected OpenAI-direct/OpenRouter preflights and any failed tasks remain
+evidence; they are not converted into zero-score model outcomes. Campaign
+completion requires every arm/task receipt, objective τ-bench scoring, hashes,
+usage/cost, and a clean credential scan, regardless of which hypothesis wins.
+
+The completed canonical run is
+`runs/exp2-4-kimi-k3-20260730-v7`: all 60 cells have real Kimi K3 action/user
+receipts and no transport or task errors. Its observed pass counts were
+baseline 7/10, Trump 6/10, casual 9/10, randomized organization 8/10,
+no-description 9/10, and all ablations 8/10. These results complete the
+preregistered experiment but do **not** reproduce the manuscript's historical
+“over 30%” and “45%” point estimates; `comparison.json` records that
+qualification instead of retrofitting a favorable claim.
 
 Example **real smoke** table (`--model gpt-4o --env airline --end-index 4`, only 4 tasks/group—illustrates table shape, not stable science):
 
@@ -276,8 +315,22 @@ User strategies include `llm`, `react`, `verify`, `reflection`. See original τ-
 ### 安装
 
 ```bash
+# 在仓库根目录使用统一的第 2 章环境
+uv sync --locked --python 3.12 --extra ch2
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch2]"
+
 cd chapter2/prompt-engineering
-pip install -r requirements.txt
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
 ```
 
 （旧文档可能写 `projects/week2/prompt-engineering`；请使用本仓库路径。）

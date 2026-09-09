@@ -1,9 +1,77 @@
 # Active Tool Discovery / 主动工具发现
 
-> Companion code for *AI Agents in Depth*, Chapter 4 — **Experiment 4-6 ★★★: Proactive Tool Discovery**. Compares full injection, retrieval prefilter, and active discovery on a 126-tool library.  
-> 配套《深入理解 AI Agent》第 4 章 **实验 4-6 ★★★：主动工具发现**。在 126 个跨领域工具上对比全量注入、检索预筛选与主动发现。
+> Companion code for *AI Agents in Depth*, Chapter 4 — **Experiment 4-1 ★★★: Proactive Tool Discovery**. Compares full injection, retrieval prefilter, and active discovery on a 126-tool library.  
+> 配套《深入理解 AI Agent》第 4 章 **实验 4-1 ★★★：主动工具发现**。在 126 个跨领域工具上对比全量注入、检索预筛选与主动发现。
 
 ← [Chapter 4 index / 返回第 4 章目录](../README.md)
+
+## Code map
+
+- **Run first:** `python demo.py --offline` (mechanism smoke without credentials); use `run_exact_experiment.py` only for the formal real-tool campaign.
+- **Start here:** `discovery.py::ToolIndex` builds/searches the index; `agent.py::run_active_discovery` shows on-demand schema injection.
+- **Core behavior:** compare `run_full_injection`, `run_retrieval_prefilter` and `run_active_discovery`; the formal runner’s task loop is in `run_exact_experiment.py::run_agent_task`.
+- **State / protocol:** available-tool names, appended schemas, JSON action records and per-task receipts.
+- **Verifier:** `test_exact_experiment.py`, `run_exact_experiment.py::derive_acceptance` and the manifest/receipt checks.
+- **Experiment variable:** catalog size, retrieval `top_k`, strategy and task mix; compare latency, tokens and exact completion.
+- **Skip on first pass:** embedding backends, MCP transport and failure-attempt archival.
+
+## Canonical manuscript campaign / 正式实验活动
+
+`run_exact_experiment.py` replaces the mechanism-only demo for formal
+Experiment 4-1 acceptance. It obtains all 126 complete schemas from the real
+perception MCP server, proves the full-catalog control exceeds 50K measured
+tokens, uses local Ollama `qwen3:4b` for both arms, retrieves five candidates
+with `all-MiniLM-L6-v2`, and executes every selected tool through MCP against
+real public APIs/local processes. No mock tool result can satisfy a formal
+gate. Runs are resumable and store the gzipped catalog, model receipts, MCP
+receipts, artifacts, hashes, paired metrics, and an honest hypothesis result.
+
+```bash
+python run_exact_experiment.py --campaign-id my-qwen3-4b-run
+# after an interruption:
+python run_exact_experiment.py --campaign-id my-qwen3-4b-run --resume
+```
+
+`demo.py` and `offline_backend.py` remain useful teaching/CI paths, but their
+lightweight tool outputs and scripted model do not count as formal evidence.
+
+The completed canonical evidence is
+[`validation/experiment_4_1/qwen3_4b_exact_v2_20260730T130600Z/summary.json`](validation/experiment_4_1/qwen3_4b_exact_v2_20260730T130600Z/summary.json),
+with manifest SHA-256
+`88d622db4981207a9980c30abea4eb8dc2621161ded80be0cb2bb8582833153c`.
+All twelve gates passed. Control and treatment both selected every required
+capability and completed all three tasks (100% versus 100%), so the predicted
+accuracy/completion improvement was not observed. Treatment elapsed time was
+808.926 seconds versus 2,590.820 seconds for control (3.20× faster). Its
+initial system prompt was 1,251 tokens per task and it dynamically injected
+12,838 schema tokens across all tasks; control used 50,352 system-prompt tokens
+per task.
+
+The pass does not hide weak-model detours. In the treatment Apple trajectory,
+Qwen made an irrelevant search and code call (leaving a 215-byte empty SVG)
+and attempted to finish twice before the completion gate forced discovery of
+the stock and news specialists. The arXiv trajectory also retained malformed
+actions and a redundant discovery. The first v2 terminal attempt additionally
+retains real 429/503/disconnect receipts under `failed_attempts/`; a single
+bounded resume archived it and retried only that incomplete task. Completed
+receipts are never replayed, and a third real attempt is refused.
+
+`run_exact_experiment.py` 是实验 4-1 的正式运行器：从真实感知 MCP 读取 126 个完整
+schema，验证控制组超过 50K token，两组都使用本地 Ollama `qwen3:4b`，实验组用
+`all-MiniLM-L6-v2` 每次检索五个候选，并通过 MCP 调用真实公共 API 或本地进程执行所选
+工具。mock 结果不能通过正式门禁；中断后可用 `--resume` 续跑。`demo.py` 与离线后端仅作
+教学/CI 机制自检，不是正式验收证据。
+
+正式证据为
+[`validation/experiment_4_1/qwen3_4b_exact_v2_20260730T130600Z/summary.json`](validation/experiment_4_1/qwen3_4b_exact_v2_20260730T130600Z/summary.json)，
+manifest SHA-256 为
+`88d622db4981207a9980c30abea4eb8dc2621161ded80be0cb2bb8582833153c`。
+12 项门禁全部通过；对照组与实验组均完成 3/3 任务，准确率均为 100%，因此正文
+预期的准确率/完成率提升并未出现。实验组用时 808.926 秒，对照组为
+2,590.820 秒（快 3.20×）；实验组每任务初始 system prompt 为 1,251 token，
+三任务合计动态注入 12,838 token，对照组每任务则为 50,352 token。
+成功轨迹仍保留了 Apple 任务的无关搜索/代码调用、215 字节空 SVG、两次过早结束，
+以及 arXiv 任务的格式错误和冗余发现；不把通过解读为“工具选择过程干净”。
 
 ---
 
@@ -21,8 +89,8 @@ When an Agent has hundreds of tools, a common approach is to inject every tool J
 ### Mechanisms
 
 ```
-tools_library.py   126 cross-domain tools (finance/web/arxiv/github/geo/weather/media/...; 17 domains)
-                   Real name/description/parameters; execution is lightweight mock (focus: “pick the right tool”)
+tools_library.py   126 cross-domain teaching tools (finance/web/arxiv/github/geo/weather/media/...; 17 domains)
+                   demo.py uses lightweight outputs; the formal runner instead uses perception MCP schemas/execution
                    Intentionally mixes 8 generic/near-synonym tools (web_search, etc.) with inflated descriptions
                    select_tools(size): subset by --tool-set-size to show full injection cost growing with catalog size
 discovery.py       Pluggable embedding backend + tool vector index; OpenAIEmbedder uses text-embedding-3-small
@@ -46,7 +114,22 @@ Native function-calling is heavily optimized for tool choice and rarely errs eve
 ### How to run
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 4 environment
+uv sync --locked --python 3.12 --extra ch4
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch4]"
+
+cd chapter4/active-tool-discovery
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
 
 # Path A: offline mechanism self-check (no keys; token/latency real; accuracy = heuristic routing only)
 python demo.py --offline
@@ -221,7 +304,22 @@ demo.py            对同一组任务分别跑所选策略，打印 token / 延�
 ### 运行
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 4 章环境
+uv sync --locked --python 3.12 --extra ch4
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch4]"
+
+cd chapter4/active-tool-discovery
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
 
 # 方式 A：离线机制自检（无需任何 key；token/延迟真实，准确率仅反映启发式路由）
 python demo.py --offline

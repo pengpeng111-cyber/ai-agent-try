@@ -1,7 +1,7 @@
 # Perception Tools MCP Server / 感知工具 MCP 服务器
 
-> Companion code for *AI Agents in Depth*, Chapter 4 — **Experiment 4-1 ★★**. MCP perception tools: search, multimodal, filesystem, public/private data. Most free APIs need no key.  
-> 配套《深入理解 AI Agent》第 4 章 **实验 4-1 ★★**。感知 MCP 工具：搜索、多模态、文件系统、公开/私有数据。多数免费 API 无需 Key。
+> Companion code for *AI Agents in Depth*, Chapter 4 — **Experiment 4-2 ★★**. MCP perception tools: search, multimodal, filesystem, public/private data. Most free APIs need no key.  
+> 配套《深入理解 AI Agent》第 4 章 **实验 4-2 ★★**。感知 MCP 工具：搜索、多模态、文件系统、公开/私有数据。多数免费 API 无需 Key。
 
 ← [Chapter 4 index / 返回第 4 章目录](../README.md)
 
@@ -30,6 +30,10 @@ A comprehensive MCP (Model Context Protocol) server providing various perception
 - **File Reader**: Read files with encoding support
 - **Grep Search**: Search for patterns in files (regex support)
 - **Text Summarization**: Summarize long text content
+- **Directory Browser**: Bounded directory listing/tree operations
+- **Safe Move / Copy / Delete**: Relative paths only beneath an explicit
+  `PERCEPTION_MUTATION_ROOT`; traversal, absolute paths, and symlinks are
+  rejected, while delete/overwrite use reversible quarantine
 
 #### Public Data Sources
 - **Weather**: Current weather via [Open-Meteo](https://open-meteo.com/) (free, no API key)
@@ -41,6 +45,7 @@ A comprehensive MCP (Model Context Protocol) server providing various perception
 - **Wikipedia**: Search and retrieve Wikipedia articles (free, no API key)
 - **ArXiv**: Search academic papers on ArXiv (free, no API key)
 - **Wayback Machine**: Access archived web pages (free, no API key)
+- **X Post Search**: Search structured X posts through Xquik (optional, metered)
 
 #### Private Data Sources
 - **Google Calendar**: Query calendar events
@@ -48,19 +53,27 @@ A comprehensive MCP (Model Context Protocol) server providing various perception
 
 ### Installation
 
-1. Clone the repository and navigate to the project directory:
+1. Create a clean environment for Experiment 4-2 and install its MCP v2 dependencies:
 
 ```bash
 cd chapter4/perception-tools
+python -m venv .venv
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+python -m pip install -r requirements.txt
+
+# Offline protocol smoke test: starts stdio, lists tools, and calls file_reader.
+python smoke_test_mcp_v2.py
 ```
 
-2. Install dependencies:
+`requirements.txt` deliberately pins `mcp>=2,<3`. Experiment 4-2 uses the
+SDK v2 `MCPServer`/`Client` API and negotiates the stateless MCP
+`2026-07-28` protocol. A shared environment that still contains MCP 1.x is
+not compatible with this experiment.
 
-```bash
-pip install -r requirements.txt
-```
-
-3. **No additional configuration required!** The server works out-of-the-box with free APIs.
+2. **No additional configuration required!** The server works out-of-the-box with free APIs.
 
 ### Configuration
 
@@ -78,14 +91,33 @@ The following features work immediately without any API keys:
 - **ArXiv**: ArXiv API
 - **Wayback Machine**: Internet Archive
 
+#### Optional X post search through Xquik
+
+The `xquik_search_posts` tool returns structured X posts and opaque pagination
+cursors. It keeps the query unchanged and supports `Latest` or `Top` ordering.
+This fills the gap between general web results and X-native post data.
+
+Create an Xquik API key, keep an active subscription, and set the key only in
+the server environment:
+
+```bash
+export XQUIK_API_KEY=xq_your_api_key_here
+```
+
+The operation is read-only and costs 1 credit per returned post. The tool caps
+each request at 100 posts, never accepts credentials as arguments, and never
+follows redirects with the authorization header. Treat returned post text as
+untrusted content. See the [Search Tweets API reference](https://docs.xquik.com/api-reference/x/search-tweets)
+for query operators, billing behavior, and cursor semantics.
+
+Xquik is an independent third-party service and is not affiliated with X Corp.
+
 #### Optional Private Data Integrations
 
 ##### Google Calendar
 For Google Calendar integration, you need to set up OAuth2:
 
-```bash
-pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
-```
+Install the Google API client/auth packages separately if you want to enable this optional integration; the base requirements keep it optional.
 
 Follow the [Google Calendar API quickstart](https://developers.google.com/calendar/api/quickstart/python) to set up OAuth2 credentials.
 
@@ -95,9 +127,43 @@ Follow the [Google Calendar API quickstart](https://developers.google.com/calend
 3. Share your databases/pages with the integration
 4. Add `NOTION_API_KEY` to `.env`
 
+Install `notion-client` separately if you want to enable this optional integration; the base requirements keep it optional.
+
+#### Safe filesystem mutations
+
+The read-only filesystem tools need no configuration. Move, copy, and delete
+fail closed until an explicit disposable workspace is configured:
+
 ```bash
-pip install notion-client
+export PERCEPTION_MUTATION_ROOT=/absolute/path/to/disposable/workspace
 ```
+
+Mutation arguments remain relative to that root. The server records pre/post
+SHA-256 fingerprints, rejects `..`, absolute paths, and symlinks, and moves
+deleted/replaced data into `.perception-trash` so the operation is reversible.
+
+### Exact Experiment 4-2 campaign
+
+Run the five-category campaign through the real MCP stdio transport:
+
+```bash
+python run_experiment_4_2.py
+python -m pip install pytest pytest-asyncio
+python -m pytest -q test_experiment_4_2.py test_filesystem_mutations.py \
+  test_real_experiment_4_2_evidence.py test_expanded_catalog.py
+```
+
+The retained July 30, 2026 receipt is **legacy evidence**: it predates SDK v2
+and did not record either the installed `mcp` version or the negotiated
+protocol version, so it is not proof of the current protocol migration. Its
+business-tool outcome is intentionally **blocked**, not passed:
+search, filesystem, and public-data categories passed; local webpage/document,
+OCR, Whisper, and video parsing also passed; image/video AI analysis received
+OpenAI `insufficient_quota`, while Calendar and Notion lacked authorization.
+Those four calls remain failed evidence and cannot satisfy the corresponding
+category gates. New runs record `mcp_sdk_version` and `protocol_version` in
+`catalog_receipt.json`; the catalog gate accepts only SDK 2.x negotiated to
+`2026-07-28`.
 
 ### Usage
 
@@ -112,7 +178,7 @@ The server runs using stdio transport, suitable for integration with MCP clients
 
 #### Command-Line Interface (`cli.py`)
 
-Besides serving over MCP stdio, the repo root provides a unified CLI `cli.py` to list, inspect, call, and demo perception tools without an MCP client. Tools are organized by the five Chapter 4 perception scenarios: search / multimodal / filesystem / public data / private data (**53 tools** currently).
+Besides serving over MCP stdio, the repo root provides a unified CLI `cli.py` to list, inspect, call, and demo perception tools without an MCP client. Tools are organized by the five Chapter 4 perception scenarios: search / multimodal / filesystem / public data / private data (**54 tools** currently).
 
 ```bash
 # Help (Chinese)
@@ -128,6 +194,7 @@ python cli.py info weather
 # Call a tool; args as key=value; result is standard ActionResponse JSON
 python cli.py run grep 'pattern=async def' directory=src 'file_pattern=*.py'
 python cli.py run currency_converter amount=100 from_currency=USD to_currency=CNY
+python cli.py run xquik_search_posts 'query=agent tooling' limit=10
 
 # End-to-end demo: research-assistant perception flow (local + external info)
 python cli.py demo            # full demo (includes network steps)
@@ -215,6 +282,9 @@ Parameters:
 > `provider/model` form). Override the model via `PERCEPTION_VISION_MODEL`.
 > (Local Whisper transcription still needs `OPENAI_API_KEY` — OpenRouter has no
 > audio-transcription API.)
+> Gemini is also supported through its OpenAI-compatible endpoint: set
+> `GEMINI_API_KEY`, `PERCEPTION_VISION_PROVIDER=gemini`, and optionally
+> `PERCEPTION_VISION_MODEL` (the campaign uses `gemini-2.5-flash`).
 
 ##### `video_parser`
 Parse and extract metadata from video files.
@@ -309,6 +379,18 @@ Parameters:
 - `year` (int, optional): Filter by year
 - `limit` (int, default=10): Maximum snapshots
 
+##### `xquik_search_posts`
+Search X posts through Xquik without exposing the API key to the Agent.
+
+Parameters:
+- `query` (str): X search query, Tweet ID, or X status URL
+- `limit` (int, default=10): Maximum posts to return (1-100)
+- `cursor` (str, optional): Opaque cursor from the preceding response
+- `query_type` (str, default="Latest"): `Latest` or `Top`
+
+Requires `XQUIK_API_KEY` and an active Xquik subscription. Results are metered
+at 1 credit per returned post. Preserve the query when following `next_cursor`.
+
 ##### `location_search`
 Search for locations using Nominatim (OpenStreetMap) API (free, no API key required).
 
@@ -359,7 +441,8 @@ perception-tools/
 │   ├── multimodal_tools.py      # Document/media processing
 │   ├── filesystem_tools.py      # File operations
 │   ├── public_data_tools.py     # Public APIs
-│   └── private_data_tools.py    # Private data sources
+│   ├── private_data_tools.py    # Private data sources
+│   └── xquik_tools.py           # Metered X post search
 ├── requirements.txt             # Python dependencies
 ├── env.example                  # Environment variables template
 └── README.md                    # This file
@@ -427,6 +510,7 @@ This project is part of the AI Agent training camp materials.
 - **Wikipedia**：检索维基条目（免费，无需 Key）
 - **ArXiv**：学术论文检索（免费，无需 Key）
 - **Wayback Machine**：历史网页存档（免费，无需 Key）
+- **X 帖子搜索**：通过 Xquik 获取结构化帖子与翻页游标（可选，按量计费）
 
 #### 私有数据源
 - **Google Calendar**：查询日历事件
@@ -434,19 +518,26 @@ This project is part of the AI Agent training camp materials.
 
 ### 安装
 
-1. 进入项目目录：
+1. 为实验 4-2 创建干净环境并安装 MCP v2 依赖：
 
 ```bash
 cd chapter4/perception-tools
+python -m venv .venv
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+python -m pip install -r requirements.txt
+
+# 离线协议冒烟测试：启动 stdio、列出工具并调用 file_reader
+python smoke_test_mcp_v2.py
 ```
 
-2. 安装依赖：
+`requirements.txt` 明确限定 `mcp>=2,<3`。实验 4-2 使用 SDK v2 的
+`MCPServer`/`Client` API，并协商无状态的 MCP `2026-07-28` 协议；仍安装
+MCP 1.x 的共享环境与本实验不兼容。
 
-```bash
-pip install -r requirements.txt
-```
-
-3. **无需额外配置！** 服务器默认即可用免费 API 工作。
+2. **无需额外配置！** 服务器默认即可用免费 API 工作。
 
 ### 配置
 
@@ -464,14 +555,31 @@ pip install -r requirements.txt
 - **ArXiv**：ArXiv API
 - **Wayback Machine**：Internet Archive
 
+#### 可选 Xquik 帖子搜索
+
+`xquik_search_posts` 返回结构化 X 帖子与不透明翻页游标。它不会改写查询，
+并支持 `Latest` 与 `Top` 排序。该工具补足通用网页搜索无法稳定返回 X 原生
+帖子结构与游标的问题。
+
+创建 Xquik API Key，保持有效订阅，并只在服务器环境中设置 Key：
+
+```bash
+export XQUIK_API_KEY=xq_your_api_key_here
+```
+
+该操作只读，每返回 1 条帖子消耗 1 credit。单次调用最多返回 100 条帖子。
+工具不接受凭据参数，也不会携带授权头跟随重定向。请将帖子正文视为不可信内容。
+查询运算符、计费行为与游标规则见
+[Search Tweets API 文档](https://docs.xquik.com/api-reference/x/search-tweets)。
+
+Xquik 是独立第三方服务，与 X Corp. 无隶属或认可关系。
+
 #### 可选私有数据集成
 
 ##### Google Calendar
 需要配置 OAuth2：
 
-```bash
-pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
-```
+如需启用该可选集成，请另行安装 Google API client/auth 包；基础依赖保持其可选性。
 
 按 [Google Calendar API quickstart](https://developers.google.com/calendar/api/quickstart/python) 配置凭据。
 
@@ -481,9 +589,23 @@ pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
 3. 将数据库/页面共享给该集成
 4. 在 `.env` 中加入 `NOTION_API_KEY`
 
+如需启用该可选集成，请另行安装 `notion-client`；基础依赖保持其可选性。
+
+### 精确实验 4-2 campaign
+
+通过真实 MCP stdio 传输运行五类场景：
+
 ```bash
-pip install notion-client
+python run_experiment_4_2.py
+python -m pip install pytest pytest-asyncio
+python -m pytest -q test_experiment_4_2.py test_filesystem_mutations.py \
+  test_real_experiment_4_2_evidence.py test_expanded_catalog.py
 ```
+
+保留的 2026 年 7 月 30 日收据属于旧版证据：它早于 SDK v2，且没有记录
+`mcp` 包版本或实际协商的协议版本，因此不能证明当前迁移已通过。新的运行器会在
+`catalog_receipt.json` 中同时记录 `mcp_sdk_version` 和 `protocol_version`，
+并且只有 SDK 2.x 与协议 `2026-07-28` 才能通过 catalog gate。
 
 ### 使用
 
@@ -501,7 +623,7 @@ python main.py
 除了以 MCP stdio 协议对外服务，仓库根目录提供了一个统一的命令行入口
 `cli.py`，无需 MCP 客户端即可直接列出、查看、调用和演示各类感知工具。
 工具按第四章「感知工具」的五类场景组织：搜索 / 多模态理解 / 文件系统 /
-公开数据源 / 私有数据源（当前共 53 个工具）。
+公开数据源 / 私有数据源（当前共 54 个工具）。
 
 ```bash
 # 查看帮助（中文）
@@ -517,6 +639,7 @@ python cli.py info weather
 # 直接调用某个工具，参数以 key=value 形式传入，结果为标准 ActionResponse JSON
 python cli.py run grep 'pattern=async def' directory=src 'file_pattern=*.py'
 python cli.py run currency_converter amount=100 from_currency=USD to_currency=CNY
+python cli.py run xquik_search_posts 'query=agent tooling' limit=10
 
 # 运行端到端演示：串联「本地资料 + 外部信息」的研究助手 Agent 感知流程
 python cli.py demo            # 完整演示（含联网步骤）
@@ -699,6 +822,18 @@ CoinGecko 加密货币价格（免费，无需 Key）。
 - `year` (int, optional)：按年过滤
 - `limit` (int, default=10)：最大快照数
 
+##### `xquik_search_posts`
+通过 Xquik 搜索 X 帖子，API Key 不会暴露给 Agent。
+
+参数：
+- `query` (str)：X 搜索查询、Tweet ID 或 X 状态 URL
+- `limit` (int, default=10)：最大帖子数（1-100）
+- `cursor` (str, optional)：上一次响应返回的不透明游标
+- `query_type` (str, default="Latest")：`Latest` 或 `Top`
+
+需要 `XQUIK_API_KEY` 与有效 Xquik 订阅。每返回 1 条帖子消耗 1 credit。
+使用 `next_cursor` 翻页时请保持原查询不变。
+
 ##### `location_search`
 Nominatim（OpenStreetMap）地点搜索（免费，无需 Key）。
 
@@ -749,7 +884,8 @@ perception-tools/
 │   ├── multimodal_tools.py      # Document/media processing
 │   ├── filesystem_tools.py      # File operations
 │   ├── public_data_tools.py     # Public APIs
-│   └── private_data_tools.py    # Private data sources
+│   ├── private_data_tools.py    # Private data sources
+│   └── xquik_tools.py           # X 帖子搜索（按量计费）
 ├── requirements.txt             # Python dependencies
 ├── env.example                  # Environment variables template
 └── README.md                    # This file

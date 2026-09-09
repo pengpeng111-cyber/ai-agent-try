@@ -7,9 +7,98 @@
 
 ---
 
+## Canonical manuscript reproduction / 正式复现实验
+
+Experiment 2-6 is **the pinned official Anthropic PPTX Skill + a real academic
+PDF**, executed by a skills-capable agent runtime. Under the author's
+runtime-agnostic acceptance policy (2026-07-31), acceptance is NOT gated on
+Anthropic credentials: the runtime may be **Claude Code** or an equivalent
+runtime that supports SKILL.md-style progressive disclosure, such as **Kimi
+Code CLI**. The pinned Skill content, the real paper, and every artifact gate
+are identical for either runtime.
+
+The runner pins the official repository to revision
+`69c0b1a0674149f27b61b2635f935524b6add202`, the revision containing the
+`html2pptx.md` flow named in the manuscript, and uses Vaswani et al.'s real
+*Attention Is All You Need* PDF (arXiv:1706.03762, SHA-256
+`bdfaa68d...82df697`).
+
+Run with Kimi Code CLI (`KIMI_API_KEY` / `MOONSHOT_API_KEY`, model
+`kimi-code/k3`):
+
+```bash
+cd chapter2/agent-skills-ppt
+python run_official_experiment.py --runtime kimi \
+  --output runs/exp2-6-kimi-pptx-$(date +%Y%m%d-%H%M%S)
+```
+
+Run with Claude Code (valid `ANTHROPIC_API_KEY`, or `--auth-source
+claude-login` for an enabled Claude Code login):
+
+```bash
+cd chapter2/agent-skills-ppt
+python run_official_experiment.py --runtime claude \
+  --output runs/exp2-6-claude-pptx-$(date +%Y%m%d-%H%M%S)
+```
+
+Both paths fetch and verify the pinned external Skill (never copied or
+reimplemented), install it as the runtime's only Skill (Claude:
+`.claude/skills/pptx` symlink; Kimi: `--skills-dir`, which replaces the
+auto-discovered skill directories for that launch), and capture the raw
+stream-json event stream as the receipt. Raw events prove Skill selection,
+full `SKILL.md`/`html2pptx.md` disclosure, official script use, thumbnail
+inspection, and artifact creation. The fail-closed validator requires 10–15
+slides, all manuscript sections, three PDF-extracted visuals byte-identical to
+media embedded in the deck, a full-deck thumbnail grid, and a credential scan
+of the stream. See `experiment_protocol.json` for all frozen gates.
+
+### Canonical evidence status (2026-07-31): PASSED with Kimi Code CLI
+
+`runs/exp2-6-kimi-pptx-20260731-v1/manifest.json` passes all 15 gates:
+
+- Runtime: Kimi Code CLI 0.31.0, model `kimi-code/k3`, 114 tool calls over 25
+  assistant turns; the raw stream (`kimi_stream.jsonl`) contains no credential
+  material.
+- Progressive disclosure is genuine: the model invoked the `pptx` Skill
+  (metadata → full `SKILL.md`), then read `html2pptx.md`, used the official
+  `scripts/html2pptx.js` workflow, ran the official `scripts/thumbnail.py`,
+  and iterated on visually inspected thumbnails (overlap/cutoff fixes) before
+  finishing.
+- Deck: 13 slides covering title, background, method/architecture, training,
+  key results, generalization, interpretability, and conclusion; valid
+  OOXML ZIP, reopened by python-pptx and rendered to 13 pages by LibreOffice.
+- Four visuals (Figure 1, Figure 2, Table 2, Figure 3) were cropped from the
+  source PDF with `pdftoppm`, documented in `source_visuals/manifest.json`
+  with page/label/caption, and are byte-identical to media embedded in the
+  PPTX.
+
+Earlier Claude Code attempts (`runs/exp2-6-claude-pptx-20260730-v2`–`v4`) were
+externally blocked before inference by invalid/disabled Anthropic credentials;
+their fail-closed manifests and credential-free streams are retained as
+evidence of the old gate. The Claude path above remains fully supported for
+readers who have Anthropic credentials. The existing
+`output/presentation.pptx` belongs to the legacy demo (nine slides and no
+embedded media) and is not acceptance evidence.
+
+正式复现使用固定的 Anthropic 官方 PPTX Skill 与真实论文 PDF，运行时可以是
+Claude Code 或支持 SKILL.md 渐进式披露的等价运行时（如 Kimi Code CLI）——实验
+对象是 Skill 内容，运行时可替换。两条路径都会固定外部仓库版本、保存完整的渐进式
+披露轨迹，并对页数、章节、论文原图、PPTX 有效性、缩略图和凭证泄漏逐项验收。
+
+## Legacy mechanism illustration (not acceptance evidence)
+
+The older `demo.py` and bundled `skills/pptx` tree below are retained as an
+offline teaching aid. They use a local isomorphic loader and a prewritten short
+outline, so neither online nor offline mode counts as fulfillment of the
+manuscript experiment.
+
+以下旧 demo 仅用于离线讲解机制，不属于实验 2-6 的正式验收证据。
+
+---
+
 ## English
 
-### Purpose
+### Legacy demo purpose
 
 Validates a core claim from the book: **an Agent can complete complex work by loading domain Skills on demand via progressive disclosure**, without stuffing all knowledge into the system prompt at once.
 
@@ -29,7 +118,7 @@ The original book experiment ran on **Claude Code + Anthropic’s official PPTX 
 
 The mechanism maps one-to-one; the built-in Skill loader is replaced by explicit read/execute tools so progressive disclosure still works without Anthropic access.
 
-> **OpenRouter fallback:** Primary path is OpenAI (default model `gpt-5.6-luna`). If `OPENAI_API_KEY` is unset but `OPENROUTER_API_KEY` is set, requests go through OpenRouter (`gpt-*` → `openai/…`). With `OPENAI_API_KEY` set, behavior is unchanged.
+> **Routing:** Default model is `gpt-5.6-luna`. When `OPENROUTER_API_KEY` is set, `gpt-5*` requests go through OpenRouter (`gpt-*` → `openai/…`) even if `OPENAI_API_KEY` is also set: OpenAI's direct `/v1/chat/completions` needs org verification for these ids and refuses function tools unless reasoning is switched off, which would defeat the point of this experiment. With only `OPENAI_API_KEY`, the run stays on the direct endpoint and drops to `reasoning_effort="none"` the first time it is refused, printing a note when it does.
 
 ### Three-layer progressive disclosure
 
@@ -51,9 +140,25 @@ skills/
 ### Run
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 2 environment
+uv sync --locked --python 3.12 --extra ch2
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch2]"
+
+cd chapter2/agent-skills-ppt
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env        # or export directly
-export OPENAI_API_KEY=sk-...   # default model gpt-5.6-luna; override with OPENAI_MODEL
+export OPENAI_API_KEY=your-openai-api-key   # default model gpt-5.6-luna; override with OPENAI_MODEL
 python demo.py
 python demo.py --paper papers/your_paper.md    # different paper/outline
 python demo.py -o output/deck.pptx --model gpt-5.6-luna   # output path / model
@@ -80,6 +185,21 @@ Without an OpenAI key, `--offline` runs the same three-layer progressive disclos
 python demo.py --offline                       # writes output/presentation.pptx, no network
 python demo.py --offline -o output/deck.pptx   # custom output path
 ```
+
+#### Offline validation
+
+```bash
+# From the repository root; include dev tools for pytest.
+uv sync --locked --python 3.12 --extra ch2 --extra dev
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+
+cd chapter2/agent-skills-ppt
+python -m pytest tests
+python demo.py --offline
+```
+
+`tests/` contains offline regressions for malformed or unsafe tool-dispatch arguments and PPTX generator edge cases. They do not require an API key.
 
 The bundled script can also run alone (no Agent):
 
@@ -120,6 +240,7 @@ python skills/pptx/scripts/generate_pptx.py papers/sample_outline.json output/de
 | `skills/pptx/scripts/generate_pptx.py` | Bundled generator: outline → `.pptx` |
 | `papers/sample_paper.md` | Bundled short paper/outline (online input) |
 | `papers/sample_outline.json` | Slide outline for offline mode (payload schema example) |
+| `tests/` | Offline regression tests for dispatch safety and generator edge cases |
 | `output/presentation.pptx` | Generated deck (created at runtime) |
 
 ### Use another paper
@@ -150,7 +271,7 @@ Replace `papers/sample_paper.md` or pass `python demo.py --paper your_paper.md`.
 
 机制一一对应，只是把「Claude 内置的 Skill 加载器」换成了几个显式的读取/执行工具，从而在没有 Anthropic 访问权限时，依然能真实演示渐进式披露的三层加载过程。
 
-> 说明：本项目主用 OpenAI（默认模型 gpt-5.6-luna）。**通用回退**：未设置 `OPENAI_API_KEY` 时，只要配置了 `OPENROUTER_API_KEY`，会自动改走 OpenRouter（`gpt-*` 映射为 `openai/…`）。设置了 `OPENAI_API_KEY` 时行为完全不变。
+> 说明：默认模型 gpt-5.6-luna。**路由**：只要配置了 `OPENROUTER_API_KEY`，`gpt-5*` 一律改走 OpenRouter（`gpt-*` 映射为 `openai/…`），即使同时设置了 `OPENAI_API_KEY` —— OpenAI 直连的 `/v1/chat/completions` 对这些模型既要组织实名认证，又不允许 function tools 与推理并存，而后者正是本实验要展示的能力。只有 `OPENAI_API_KEY` 时仍走直连，首次被拒后自动降级为 `reasoning_effort="none"` 并打印提示。
 
 ### 渐进式披露的三层结构
 
@@ -172,9 +293,25 @@ skills/
 ### 运行
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 2 章环境
+uv sync --locked --python 3.12 --extra ch2
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.\.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch2]"
+
+cd chapter2/agent-skills-ppt
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env        # 或直接 export
-export OPENAI_API_KEY=sk-...   # 默认模型 gpt-5.6-luna，可用 OPENAI_MODEL 覆盖
+export OPENAI_API_KEY=your-openai-api-key   # 默认模型 gpt-5.6-luna，可用 OPENAI_MODEL 覆盖
 python demo.py
 python demo.py --paper papers/your_paper.md    # 换一篇论文/大纲
 python demo.py -o output/deck.pptx --model gpt-5.6-luna   # 指定输出路径 / 模型
@@ -201,6 +338,21 @@ python demo.py --help                          # 查看全部参数
 python demo.py --offline                       # 生成 output/presentation.pptx，全程无网络
 python demo.py --offline -o output/deck.pptx   # 指定输出路径
 ```
+
+#### 离线验证
+
+```bash
+# 从仓库根目录开始；pytest 需要 dev 依赖。
+uv sync --locked --python 3.12 --extra ch2 --extra dev
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+
+cd chapter2/agent-skills-ppt
+python -m pytest tests
+python demo.py --offline
+```
+
+`tests/` 包含工具分发参数缺失、非法路径和 PPTX 生成器边界情况的离线回归测试，无需 API Key。
 
 捆绑脚本本身也可脱离 Agent 单独运行，直接把大纲 JSON 落地为 pptx：
 
@@ -243,6 +395,7 @@ python skills/pptx/scripts/generate_pptx.py papers/sample_outline.json output/de
 | `skills/pptx/scripts/generate_pptx.py` | 捆绑生成器，用 python-pptx 从大纲生成 .pptx |
 | `papers/sample_paper.md` | 自带的精简论文/大纲（在线模式输入） |
 | `papers/sample_outline.json` | 内置幻灯片大纲（离线模式输入，同时是 payload schema 的范例） |
+| `tests/` | 工具分发安全性与生成器边界情况的离线回归测试 |
 | `output/presentation.pptx` | 生成的演示文稿（输出，运行后产生） |
 
 ### 换一篇论文

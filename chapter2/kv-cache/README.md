@@ -64,9 +64,25 @@ Both modes append tool results within an iteration so the API sees a complete tu
 ### Installation
 
 ```bash
+# From the repository root: use the shared Chapter 2 environment
+uv sync --locked --python 3.12 --extra ch2
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch2]"
+
 cd chapter2/kv-cache
-pip install -r requirements.txt
-export MOONSHOT_API_KEY="your-api-key-here"
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
+cp env.example .env                  # edit .env with your key
+# Or export MOONSHOT_API_KEY="your-api-key-here"
 ```
 
 > **OpenRouter fallback:** If `MOONSHOT_API_KEY` / `KIMI_API_KEY` is unset but `OPENROUTER_API_KEY` is set, the experiment uses OpenRouter (`kimi-*` → `moonshotai/kimi-k2`). With a Moonshot key set, behavior is unchanged.
@@ -121,6 +137,27 @@ The table compares cache hit rate, cache ratio, TTFT, total time, and illustrati
 ```bash
 python main.py --mode correct --task "Read all README files and summarize their contents"
 python main.py --mode correct --root-dir ../.. --task "Analyze the project structure"
+```
+
+### Tests and manual checks
+
+Offline regressions live under `tests/` and do not require API keys:
+
+```bash
+uv sync --locked --python 3.12 --extra ch2 --extra dev
+source .venv/bin/activate
+cd chapter2/kv-cache
+python -m pytest tests
+```
+
+Live smoke checks and demonstrations live under `tests/manual/`. They are not
+collected by pytest because their filenames use `check_*.py` or `demo_*.py`:
+
+```bash
+MOONSHOT_API_KEY="your-key" python tests/manual/demo_quick.py
+MOONSHOT_API_KEY="your-key" python tests/manual/check_tool_calling.py
+MOONSHOT_API_KEY="your-key" python tests/manual/check_cache_invalidation.py
+MOONSHOT_API_KEY="your-key" python tests/manual/check_agent_error_recovery.py
 ```
 
 ### Metrics
@@ -187,11 +224,12 @@ Reading: `shuffled_tools` reorders tool definitions near the front of the prefix
 kv-cache/
 ├── agent.py                # ReAct agent + modes
 ├── main.py                 # Experiment runner CLI
-├── demo_quick.py
-├── test_*.py
+├── tests/                  # offline pytest regressions
+│   └── manual/             # live/API smoke checks, not collected by pytest
 ├── requirements.txt
 ├── README.md
-└── *.log
+├── result_*.json           # retained receipts for offline --report
+└── kv_cache_demo.log
 ```
 
 **Components:** `KVCacheAgent`, `LocalFileTools`, `KVCacheMode`, `AgentMetrics`.
@@ -287,9 +325,25 @@ KV Cache 存储注意力机制中的键值对。对话上下文稳定时，可�
 ### 安装
 
 ```bash
+# 在仓库根目录使用统一的第 2 章环境
+uv sync --locked --python 3.12 --extra ch2
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch2]"
+
 cd chapter2/kv-cache
-pip install -r requirements.txt
-export MOONSHOT_API_KEY="your-api-key-here"
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
+cp env.example .env                  # 编辑 .env，填入 API Key
+# 或 export MOONSHOT_API_KEY="your-api-key-here"
 ```
 
 > **通用回退（OpenRouter）**：未设置 `MOONSHOT_API_KEY` / `KIMI_API_KEY` 时，只要配置了 `OPENROUTER_API_KEY`，实验会自动改走 OpenRouter（`kimi-*` 会映射为 `moonshotai/kimi-k2`）。设置了 Moonshot key 时行为完全不变。
@@ -342,6 +396,27 @@ python main.py --report --cache-price-ratio 0.5
 ```bash
 python main.py --mode correct --task "Read all README files and summarize their contents"
 python main.py --mode correct --root-dir ../.. --task "Analyze the project structure"
+```
+
+### 测试与手动检查
+
+离线回归测试位于 `tests/`，不需要 API Key：
+
+```bash
+uv sync --locked --python 3.12 --extra ch2 --extra dev
+source .venv/bin/activate
+cd chapter2/kv-cache
+python -m pytest tests
+```
+
+需要真实 API 的冒烟脚本和演示位于 `tests/manual/`。这些文件使用
+`check_*.py` 或 `demo_*.py` 命名，因此不会被 pytest 默认收集：
+
+```bash
+MOONSHOT_API_KEY="your-key" python tests/manual/demo_quick.py
+MOONSHOT_API_KEY="your-key" python tests/manual/check_tool_calling.py
+MOONSHOT_API_KEY="your-key" python tests/manual/check_cache_invalidation.py
+MOONSHOT_API_KEY="your-key" python tests/manual/check_agent_error_recovery.py
 ```
 
 ### 指标说明
@@ -408,11 +483,12 @@ text_format      3      6.189      14.432     43.297     7,430     674       100
 kv-cache/
 ├── agent.py                # ReAct Agent + 各模式
 ├── main.py                 # 实验入口 CLI
-├── demo_quick.py
-├── test_*.py
+├── tests/                  # 离线 pytest 回归测试
+│   └── manual/             # 真实 API 冒烟脚本，不被 pytest 收集
 ├── requirements.txt
 ├── README.md
-└── *.log
+├── result_*.json           # 支持离线 --report 的保留结果
+└── kv_cache_demo.log
 ```
 
 **组件：** `KVCacheAgent`、`LocalFileTools`、`KVCacheMode`、`AgentMetrics`。

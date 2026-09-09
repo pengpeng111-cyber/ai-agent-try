@@ -65,6 +65,23 @@ Run `python attention_cli.py --help` for the full flag list. Key flags:
 
 > First run downloads model weights (~1–2 GB). GPU/MPS recommended; CPU works for short prompts.
 
+### Canonical Experiment 2-2 evidence
+
+The acceptance campaign captures more than a display-only heatmap: it pins the
+real Qwen3-0.6B revision, retains lossless first/middle/last-layer matrices for
+the exact `北京 的 天气 怎么样` prompt, generates a sequence with distinct
+`<think>` and final-answer regions, verifies the causal upper triangle
+numerically, and reports attention-sink plus beginning/middle/end position
+measurements. Observed magnitudes are results, not favorable-result gates.
+
+```bash
+python run_attention_experiment.py \
+  --output runs/exp2-2-qwen3-0.6b-$(date +%Y%m%d-%H%M%S)
+```
+
+The latest completed real run is summarized by `validation/latest.json`; its
+manifest hashes the evidence JSON, lossless NPZ tensors, and both heatmaps.
+
 ### Interactive frontend workflow
 
 #### Step 1: Generate trajectories
@@ -90,6 +107,24 @@ npm run dev
 #### Step 3: View
 
 Open http://localhost:3000. Keep the frontend running; new trajectories appear automatically.
+
+### Experiment 2-8: status-bar comparison
+
+The manuscript's Xfinity control is a separate matched campaign, not the older
+tool-vs-no-tool demo. It runs the same complete trajectory in two arms, adds
+the exact `<agent_status>` 3/3 block only to the intervention arm, samples
+three real Qwen3-0.6B decisions per arm, and captures the final layer's true
+eager-attention tensor for the first matched pair.
+
+```bash
+python run_status_bar_experiment.py \
+  --output runs/exp2-7-qwen3-0.6b-$(date +%Y%m%d-%H%M%S)
+```
+
+The output retains raw prompts, token IDs/text, behavior classifications,
+region-level response attention, lossless matrices, a side-by-side heatmap,
+model revision, hashes, and a completion receipt. The preregistered design is
+`status_bar_protocol.json`; completion does not depend on a favorable result.
 
 ### Project structure
 
@@ -187,13 +222,29 @@ result = agent.generate_with_attention(
 
 ### Requirements & installation
 
-**Python:** 3.10+, PyTorch, Transformers — see `requirements.txt`.  
+**Python:** 3.12, PyTorch, Transformers — installed by the root `ch2` extra.
 **Frontend:** Node.js 14+, npm/yarn — see `frontend/package.json`.
 
 ```bash
+# From the repository root: use the shared Chapter 2 environment
+uv sync --locked --python 3.12 --extra ch2
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch2]"
+
+cd chapter2/attention_visualization
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # edit .env for model, device, visualization settings
-pip install -r requirements.txt
 cd frontend && npm install
 ```
 
@@ -400,13 +451,29 @@ result = agent.generate_with_attention(
 
 ### 依赖与安装
 
-**Python：** 3.10+、PyTorch、Transformers，见 `requirements.txt`。  
+**Python：** 3.12、PyTorch、Transformers，由根目录 `ch2` extra 安装。
 **前端：** Node.js 14+、npm/yarn，见 `frontend/package.json`。
 
 ```bash
+# 在仓库根目录使用统一的第 2 章环境
+uv sync --locked --python 3.12 --extra ch2
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch2]"
+
+cd chapter2/attention_visualization
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # 编辑 .env 配置模型、设备与可视化选项
-pip install -r requirements.txt
 cd frontend && npm install
 ```
 

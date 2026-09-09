@@ -11,6 +11,12 @@ from datetime import datetime
 import anthropic
 import openai
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from system_state import SystemState
 from tool_registry import ToolRegistry
 
@@ -81,7 +87,7 @@ class CodingAgent:
         try:
             import subprocess
             return subprocess.getoutput("git branch --show-current") or "unknown"
-        except:
+        except Exception:
             return "unknown"
     
     def _get_main_branch(self) -> str:
@@ -94,7 +100,7 @@ class CodingAgent:
             elif "master" in branches:
                 return "master"
             return "main"
-        except:
+        except Exception:
             return "main"
     
     def _get_git_status(self) -> str:
@@ -102,7 +108,7 @@ class CodingAgent:
         try:
             import subprocess
             return subprocess.getoutput("git status --short") or "No changes"
-        except:
+        except Exception:
             return "Not a git repository"
     
     def _get_recent_commits(self) -> str:
@@ -110,7 +116,7 @@ class CodingAgent:
         try:
             import subprocess
             return subprocess.getoutput("git log --oneline -5") or "No commits"
-        except:
+        except Exception:
             return "Not a git repository"
     
     def run(self, user_message: str, max_iterations: int = 50) -> Iterator[Dict[str, Any]]:
@@ -366,7 +372,7 @@ class CodingAgent:
                 
                 try:
                     tool_input = json.loads(tool_call["arguments"])
-                except:
+                except (json.JSONDecodeError, TypeError):
                     tool_input = {}
                 
                 yield {
@@ -514,4 +520,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

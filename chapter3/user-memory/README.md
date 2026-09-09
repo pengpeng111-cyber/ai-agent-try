@@ -7,13 +7,23 @@
 
 ---
 
+## Code map
+
+- **Run first:** python main.py --mode demo --memory-mode enhanced_notes.
+- **Start here:** conversational_agent.py::ConversationalAgent.chat reads memory without directly persisting it.
+- **Core behavior:** background_memory_processor.py::BackgroundMemoryProcessor.process_recent_conversations extracts candidates and applies updates.
+- **State / protocol:** memory_manager.py owns mode-specific storage; conversation history remains separate.
+- **Verifier:** user-memory-evaluation and the evaluation mode compare evidence, not only generated summaries.
+- **Experiment variable:** notes, enhanced notes, JSON cards and advanced JSON cards.
+- **Skip on first pass:** provider adapters, streaming presentation and benchmark helpers.
+
 ## English
 
 ### Key features
 
 - **Separated architecture**: conversational agent vs background memory processor  
 - **Memory modes**: notes → enhanced notes → JSON cards → advanced JSON cards  
-- **Providers**: Kimi/Moonshot, SiliconFlow, Doubao, OpenRouter  
+- **Providers**: Alibaba Cloud DashScope/Bailian (Qwen), Kimi/Moonshot, SiliconFlow, Doubao, OpenRouter
 - **React + tools** for structured memory ops  
 - **Streaming** with tool calls  
 - **Evaluation** integration with `user-memory-evaluation`  
@@ -22,13 +32,28 @@
 
 ### Installation
 
-Python 3.8+, at least one LLM API key.
+Python 3.12 with the root `ch3` extra, plus at least one LLM API key.
 
 ```bash
+# From the repository root: use the shared Chapter 3 environment
+uv sync --locked --python 3.12 --extra ch3
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch3]"
+
 cd chapter3/user-memory
-pip install -r requirements.txt
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env
-# MOONSHOT_API_KEY / SILICONFLOW_API_KEY / DOUBAO_API_KEY / OPENROUTER_API_KEY
+# DASHSCOPE_API_KEY / MOONSHOT_API_KEY / SILICONFLOW_API_KEY / DOUBAO_API_KEY / OPENROUTER_API_KEY
 ```
 
 ### Quick start
@@ -77,6 +102,7 @@ python main.py --mode evaluation --memory-mode advanced_json_cards --provider ki
 
 | Provider | Models (examples) | Notes |
 |----------|-------------------|--------|
+| DashScope / Bailian (Qwen) | qwen3.7-plus | Alibaba Cloud Model Studio; `qwen` and `bailian` are aliases |
 | Kimi/Moonshot | kimi-k3 | Chinese, general |
 | SiliconFlow | Qwen3-235B-… | High performance |
 | Doubao | doubao-seed-1-6-thinking-… | ByteDance |
@@ -86,6 +112,7 @@ python main.py --mode evaluation --memory-mode advanced_json_cards --provider ki
 python main.py --provider siliconflow --model "Qwen/Qwen3-235B-A22B-Thinking-2507"
 python main.py --provider openrouter --model "google/gemini-3.5-flash"
 python main.py --provider doubao --model "doubao-seed-1-6-thinking-250715"
+python main.py --provider dashscope --model "qwen3.7-plus"
 ```
 
 ### API usage
@@ -139,6 +166,7 @@ Uses test cases from `user-memory-evaluation` (histories → question → score/
 
 ```bash
 PROVIDER=kimi
+# For DashScope/Bailian, use PROVIDER=dashscope (or qwen/bailian) and set DASHSCOPE_API_KEY.
 MODEL_TEMPERATURE=0.3
 MODEL_MAX_TOKENS=4096
 MEMORY_MODE=enhanced_notes
@@ -200,8 +228,23 @@ Background processing is async; tools logged; streaming supported; state persist
 ### 安装
 
 ```bash
+# 在仓库根目录使用统一的第 3 章环境
+uv sync --locked --python 3.12 --extra ch3
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch3]"
+
 cd chapter3/user-memory
-pip install -r requirements.txt
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # 配置 MOONSHOT_API_KEY / SILICONFLOW_API_KEY / DOUBAO_API_KEY / OPENROUTER_API_KEY
 ```

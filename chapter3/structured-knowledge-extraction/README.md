@@ -1,4 +1,4 @@
-# Experiment 3-13: Extracting Latent Knowledge from Structured Data / 实验 3-13：从结构化数据中提取隐性知识
+# Experiment 3-12: Extracting Latent Knowledge from Structured Data / 实验 3-12：从结构化数据中提取隐性知识
 
 > Companion material for *AI Agents in Depth*, Chapter 3 — judicial case analysis pipeline: bottom-up factor discovery → structured extraction → archetype clustering → conversational advisory Agent.  
 > 配套《深入理解 AI Agent》第 3 章——以司法判例分析为例：因子发现 → 结构化抽取 → 案件原型聚类 → 对话式建议 Agent。
@@ -9,7 +9,29 @@
 
 ## English
 
-### What this experiment is
+### Canonical official-data campaign
+
+`python campaign.py` is the acceptance run. It reads the official CAIL2018
+archive (cache-only), deterministically materializes a bounded 420-case sample
+(360 train/60 held out across three charges), performs live bottom-up discovery
+and live modular extraction, selects per-charge clusters with silhouette
+diagnostics, and independently judges prototype-only held-out advice. The
+official URL/repository revision/archive SHA-256 and bytes, split, raw receipts,
+prototype statistics, leakage checks, and legal disclaimer gate are recorded
+under `validation/runs/<run-id>/`; `validation/latest.json` is canonical.
+
+The large `data/official/CAIL2018_ALL_DATA.zip` is intentionally ignored. Only
+the deterministic sample and validation evidence are versionable.
+
+### Legacy synthetic teaching path (not acceptance evidence)
+
+The files described below predate the canonical official-data campaign. They
+remain useful for a fast local walkthrough, but their synthetic cases and
+hand-sized run are mechanism illustrations only; they do not satisfy
+Experiment 3-12. Only `campaign.py` and `validation/latest.json` can close the
+manuscript experiment.
+
+### What this legacy demo is
 
 This lab shows how an Agent can treat a knowledge base not as a “static warehouse you only retrieve from,” but as data to **read, understand, and turn into structured decision logic**—then answer questions using that logic.
 
@@ -49,8 +71,24 @@ Uses “archetypes + hierarchical factor importance” as decision logic: extrac
 ### Run
 
 ```bash
-pip install -r requirements.txt
-cp env.example .env        # set OPENAI_API_KEY (default model gpt-5.6-luna)
+# From the repository root: use the shared Chapter 3 environment
+uv sync --locked --python 3.12 --extra ch3
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch3]"
+
+cd chapter3/structured-knowledge-extraction
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
+cp env.example .env        # set the selected provider key (OpenAI or DashScope/Bailian)
 python generate_data.py    # optional: regenerate synthetic cases (repo ships data/cases.jsonl)
 python demo.py             # full pipeline: discovery → extract → cluster → conversational advice
 ```
@@ -105,7 +143,13 @@ The **intended real dataset is CAIL2018** (Chinese criminal judgments, millions 
 
 ## 中文
 
-### 本实验是什么
+### 旧版合成教学路径（不属于验收证据）
+
+以下文件早于本页开头的正式 CAIL2018 campaign，仅保留用于快速本地教学。
+合成案例与小规模运行只能说明机制，不能验收实验 3-12；正文验收只认
+`campaign.py` 及 `validation/latest.json`。
+
+### 这个旧版 demo 是什么
 
 演示如何让 Agent 不把知识库当成“只能检索的静态仓库”，而是**先把数据读懂、从数据本身归纳出结构化的决策逻辑，再基于这套逻辑回答问题**。
 
@@ -146,7 +190,23 @@ The **intended real dataset is CAIL2018** (Chinese criminal judgments, millions 
 ### 运行
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 3 章环境
+uv sync --locked --python 3.12 --extra ch3
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch3]"
+
+cd chapter3/structured-knowledge-extraction
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env        # 填入 OPENAI_API_KEY（默认模型 gpt-5.6-luna）
 python generate_data.py    # 可选：重新生成合成判例数据集（已自带 data/cases.jsonl）
 python demo.py             # 跑通 因子发现 → 抽取 → 聚类 → 对话建议 全流程

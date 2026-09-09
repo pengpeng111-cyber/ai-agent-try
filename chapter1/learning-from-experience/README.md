@@ -76,11 +76,23 @@ A text-based treasure hunt game where agents must:
 #### Installation
 
 ```bash
-# Navigate to the project directory
+# Recommended from the repository root: use the shared Chapter 1 environment
+uv sync --locked --extra ch1
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch1]"
+
+# Enter this experiment directory for the commands below
 cd chapter1/learning-from-experience
 
-# Install dependencies
-pip install -r requirements.txt
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
 ```
 
 - Q-learning runs fully offline with **no API key**.
@@ -94,7 +106,12 @@ To run the LLM experiments, you need a Kimi (Moonshot) API key:
 2. Set the environment variable:
 
 ```bash
+export LLM_PROVIDER="moonshot"  # or dashscope/qwen/bailian
 export MOONSHOT_API_KEY="your-api-key-here"
+# For Alibaba Cloud Model Studio / Bailian (Qwen), use:
+# export LLM_PROVIDER="dashscope"
+# export DASHSCOPE_API_KEY="your-dashscope-api-key-here"
+# export DASHSCOPE_MODEL="qwen3.7-plus"
 ```
 
 Or create a `.env` file:
@@ -106,7 +123,7 @@ echo "MOONSHOT_API_KEY=your-api-key-here" > .env
 **Universal OpenRouter fallback**: if `MOONSHOT_API_KEY` is unset but `OPENROUTER_API_KEY` is set, the LLM path routes through OpenRouter. Because Kimi models are not stably available on OpenRouter, the fallback uses `OPENROUTER_MODEL` (default `openai/gpt-5.6-luna`):
 
 ```bash
-export OPENROUTER_API_KEY=sk-or-v1-your-key-here
+export OPENROUTER_API_KEY=your-openrouter-api-key
 python quick_demo.py   # runs via OpenRouter when MOONSHOT_API_KEY is missing
 ```
 
@@ -162,6 +179,20 @@ Training finishes in under ~3 seconds and prints a **learning curve table** show
 python experiment.py --mode both --model kimi-k3
 ```
 
+For the exact book protocol and acceptance-grade evidence, use the canonical
+runner. It executes the 10,000-episode Q-learning arm, 100 greedy evaluation
+episodes, and exactly one first-attempt official Moonshot Kimi K3 trajectory:
+
+```bash
+python run_experiment_7_2.py
+```
+
+The canonical runner rejects OpenRouter substitution, API errors, missing raw
+provider response IDs/content, and any parser fallback. It writes
+`validation/<timestamp>/evidence.json`; if only post-run serialization needs to
+be repaired, `finalize_experiment_7_2.py <campaign-dir>` finalizes the already
+saved raw campaign without repeating paid model calls.
+
 This will:
 
 1. Train a Q-learning agent for 10000 episodes (~3 seconds) and print its learning curve
@@ -170,7 +201,10 @@ This will:
 4. Generate comparison plots
 5. Save results to the `results/` directory
 
-**Note**: LLM training shows the full reasoning process for the first 3 episodes and the last episode. Each LLM episode takes ~1–2 minutes (real API calls), matching the cost trade-off discussed in Experiment 7-2.
+**Note**: `experiment.py` is the exploratory multi-episode runner. The canonical
+book campaign is deliberately one first attempt. The accepted 2026-07-30 Kimi
+K3 attempt took 416.11 seconds for 17 sequential reasoning calls; the earlier
+“1–2 minutes per game” estimate was not reproduced on this route.
 
 #### LLM Only
 
@@ -193,6 +227,29 @@ print("Available actions:", game.get_available_actions())
 feedback, reward, done = game.execute_action("take rusty sword")
 print(f"Feedback: {feedback}")
 print(f"Reward: {reward}")
+```
+
+### Validation
+
+Install the `dev` extra from the repository root before running pytest in a clean environment:
+
+```bash
+uv sync --locked --extra ch1 --extra dev
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+cd chapter1/learning-from-experience
+python -m pytest tests
+```
+
+The longer Q-learning learning-curve check is an offline manual smoke script, kept out of default pytest discovery:
+
+```bash
+python tests/manual/rl_learning_check.py --episodes 1000
 ```
 
 ### Experiment Results
@@ -220,16 +277,21 @@ Measured curve (deterministic env; victory rate as a sliding window over the las
 
 | Episodes | Victory rate | Q-table states | epsilon |
 | ---: | ---: | ---: | ---: |
-| 1000 | 0.1% | 124 | 0.606 |
-| 2000 | 0.0% | 129 | 0.368 |
-| 3000 | 0.0% | 130 | 0.223 |
-| 5000 | 0.0% | 132 | 0.100 |
-| 7000 | 0.0% | 138 | 0.100 |
-| 8000 | 0.0% | 140 | 0.100 |
-| 9000 | 9.3% | 143 | 0.100 |
-| 10000 | **99.8%** | 143 | 0.100 |
+| 1000 | 0.3% | 123 | 0.606 |
+| 2000 | 0.0% | 123 | 0.368 |
+| 3000 | 0.1% | 126 | 0.223 |
+| 5000 | 0.1% | 128 | 0.100 |
+| 7000 | 97.0% | 138 | 0.100 |
+| 8000 | 99.6% | 138 | 0.100 |
+| 9000 | 99.8% | 139 | 0.100 |
+| 10000 | **98.1%** | 142 | 0.100 |
 
-After training, greedy evaluation (`--eval-episodes 100`) reaches **100%** win rate, averaging 15 steps to clear. This is the core of Experiment 7-1: nearly zero wins for the first ~8000 episodes while exploring blindly; value signals need nearly 10k trials to propagate. (With free exploration variance, unseeded runs shift the inflection slightly but keep the same shape.)
+After training, the canonical greedy evaluation reaches **100%** win rate,
+averaging 12 steps. The accepted Kimi K3 arm won on its first attempt in 17
+steps with 17/17 real responses, zero API errors, zero fallbacks, and 28,242
+tokens. This reproduces the first-attempt conclusion but not the manuscript's
+historical point estimates of exactly 18 Kimi steps and an 11-step Q-learning
+solution. See the [canonical evidence](validation/20260730_011704/evidence.json).
 
 ##### RL vs LLM (Experiment 7-2 conclusions)
 
@@ -245,6 +307,17 @@ learning-from-experience/
 ├── rl_agent.py            # Q-learning implementation
 ├── llm_agent.py           # LLM with in-context learning
 ├── experiment.py          # Main experiment runner
+├── demo.py                # Interactive local game demo
+├── quick_demo.py          # Short LLM learning demo
+├── run_experiment_7_2.py  # Exact real campaign + acceptance gates
+├── finalize_experiment_7_2.py # Evidence-only recovery; no API rerun
+├── env.example            # Optional API-key template
+├── tests/
+│   ├── test_basic.py
+│   ├── test_zero_episodes.py
+│   ├── test_rl_progress_small_episodes.py
+│   └── manual/
+│       └── rl_learning_check.py
 ├── requirements.txt       # Python dependencies
 ├── README.md              # This file
 └── results/               # Experiment outputs (created on run)
@@ -379,11 +452,23 @@ LLM DECISION PROCESS
 #### 安装
 
 ```bash
-# Navigate to the project directory
+# 推荐在仓库根目录使用统一的第 1 章环境
+uv sync --locked --extra ch1
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch1]"
+
+# 进入本实验目录，后续命令都在这里运行
 cd chapter1/learning-from-experience
 
-# Install dependencies
-pip install -r requirements.txt
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
 ```
 
 - Q-learning 完全离线，**无需任何 API Key**。  
@@ -409,7 +494,7 @@ echo "MOONSHOT_API_KEY=your-api-key-here" > .env
 **通用兜底（OpenRouter）**：若未设置 `MOONSHOT_API_KEY` 但设置了 `OPENROUTER_API_KEY`，LLM 部分会自动改走 OpenRouter。由于 Kimi 模型在 OpenRouter 上不稳定可用，兜底时会使用 `OPENROUTER_MODEL`（默认 `openai/gpt-5.6-luna`）：
 
 ```bash
-export OPENROUTER_API_KEY=sk-or-v1-your-key-here
+export OPENROUTER_API_KEY=your-openrouter-api-key
 python quick_demo.py   # MOONSHOT_API_KEY 缺失时自动经 OpenRouter 运行
 ```
 
@@ -465,6 +550,18 @@ python experiment.py --mode qlearning --rl-episodes 10000 --seed 42
 python experiment.py --mode both --model kimi-k3
 ```
 
+严格复现正文协议并生成可验收证据，请运行：
+
+```bash
+python run_experiment_7_2.py
+```
+
+该入口固定运行 10,000 局 Q-learning、100 局贪婪评估和且仅一局官方
+Moonshot `kimi-k3` 首次尝试；OpenRouter 替代、API 错误、缺失原始响应
+ID/正文或任何 parser fallback 都会使验收失败。若模型调用已经完成、仅证据
+序列化失败，可运行 `python finalize_experiment_7_2.py <campaign-dir>`，直接从
+已保留的原始结果完成证据，不重复付费调用。
+
 流程：
 
 1. 训练 Q-learning 10000 局（约 3 秒）并打印学习曲线  
@@ -473,7 +570,9 @@ python experiment.py --mode both --model kimi-k3
 4. 生成对比图  
 5. 结果写入 `results/`  
 
-**说明**：LLM 训练会对前 3 局与最后一局展示完整推理。每局 LLM 约 1–2 分钟（真实 API 调用），对应书中实验 7-2 讨论的成本权衡。
+**说明**：`experiment.py` 是多局探索入口；正文规范入口只测第一局。2026-07-30
+验收运行包含 17 次串行推理调用，共耗时 416.11 秒，因此没有复现旧版
+“每局 1–2 分钟”的估计。
 
 #### 仅 LLM
 
@@ -494,6 +593,29 @@ print("Available actions:", game.get_available_actions())
 feedback, reward, done = game.execute_action("take rusty sword")
 print(f"Feedback: {feedback}")
 print(f"Reward: {reward}")
+```
+
+### 验证
+
+在干净环境中运行 pytest 前，先在仓库根目录安装 `dev` extra：
+
+```bash
+uv sync --locked --extra ch1 --extra dev
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+cd chapter1/learning-from-experience
+python -m pytest tests
+```
+
+较长的 Q-learning 学习曲线检查是离线手动 smoke 脚本，不会被默认 pytest 收集：
+
+```bash
+python tests/manual/rl_learning_check.py --episodes 1000
 ```
 
 ### 实验结果
@@ -521,16 +643,19 @@ print(f"Reward: {reward}")
 
 | Episodes | Victory rate | Q-table states | epsilon |
 | ---: | ---: | ---: | ---: |
-| 1000 | 0.1% | 124 | 0.606 |
-| 2000 | 0.0% | 129 | 0.368 |
-| 3000 | 0.0% | 130 | 0.223 |
-| 5000 | 0.0% | 132 | 0.100 |
-| 7000 | 0.0% | 138 | 0.100 |
-| 8000 | 0.0% | 140 | 0.100 |
-| 9000 | 9.3% | 143 | 0.100 |
-| 10000 | **99.8%** | 143 | 0.100 |
+| 1000 | 0.3% | 123 | 0.606 |
+| 2000 | 0.0% | 123 | 0.368 |
+| 3000 | 0.1% | 126 | 0.223 |
+| 5000 | 0.1% | 128 | 0.100 |
+| 7000 | 97.0% | 138 | 0.100 |
+| 8000 | 99.6% | 138 | 0.100 |
+| 9000 | 99.8% | 139 | 0.100 |
+| 10000 | **98.1%** | 142 | 0.100 |
 
-训练后贪婪评估（`--eval-episodes 100`）胜率为 **100%**，平均 15 步通关。这正是实验 7-1 的核心现象：前 8000 局几乎 0% 胜率、只在盲目探索，价值信号需要近万局试错才传播到位。（因随机探索有方差，未固定 `--seed` 时各次运行的拐点会略有不同，但整体形态一致。）
+规范运行训练后 100 局贪婪评估胜率为 **100%**，平均 12 步通关；Kimi K3
+第一局 17 步通关，保留 17/17 条官方响应，零 API 错误、零 fallback，共
+28,242 tokens。它复现了“第一局成功”的实质结论，但没有复现历史记录中的
+Kimi 恰好 18 步和 Q-learning 恰好 11 步。详见[规范证据](validation/20260730_011704/evidence.json)。
 
 ##### RL vs LLM（实验 7-2 的对比结论）
 
@@ -546,6 +671,17 @@ learning-from-experience/
 ├── rl_agent.py            # Q-learning implementation
 ├── llm_agent.py           # LLM with in-context learning
 ├── experiment.py          # Main experiment runner
+├── demo.py                # Interactive local game demo
+├── quick_demo.py          # Short LLM learning demo
+├── run_experiment_7_2.py  # 正文规范实测与验收门
+├── finalize_experiment_7_2.py # 仅补写证据，不重复 API 调用
+├── env.example            # Optional API-key template
+├── tests/
+│   ├── test_basic.py
+│   ├── test_zero_episodes.py
+│   ├── test_rl_progress_small_episodes.py
+│   └── manual/
+│       └── rl_learning_check.py
 ├── requirements.txt       # Python dependencies
 ├── README.md              # This file
 └── results/               # Experiment outputs (created on run)

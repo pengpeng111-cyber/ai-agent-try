@@ -5,6 +5,32 @@
 
 ← [Chapter 5 index / 返回第 5 章目录](../README.md)
 
+## Code map
+
+- **Run first:** `python demo.py --selftest` (offline policy/guard smoke); model-backed runs require the configured provider.
+- **Start here:** `airline_env.py::AirlineEnv` owns database truth and `is_refundable`; `agent.py::run_agent` drives one conversation.
+- **Core behavior:** `agent.py::_dispatch` separates control and codified tools; `demo.py::judge` scores the final environment state.
+- **State / protocol:** `Reservation`, `tasks.py::TASKS`, checklist records, tool transcript and per-arm result JSON.
+- **Verifier:** `test_campaign.py`, deterministic `judge`, and the validation manifest/paired analysis.
+- **Experiment variable:** `control` versus `codified`, model/provider, task subset and checklist parameters.
+- **Skip on first pass:** provider retry/serialization code, checkpoint plumbing and report formatting.
+
+## Formal manuscript result (canonical)
+
+The canonical campaign ran local Ollama `qwen3:4b` on all 60 frozen policy
+cases in both matched arms (120 complete trajectories). The codified arm
+verified database facts and server time and exposed checklist parameters, but
+scored 91.7% versus 95.0% for the natural-language control (exact paired
+p=0.6875). This is a complete **negative** hypothesis result, not evidence of a
+significant gain. The raw messages, tool transcripts, usage, policy truth, and
+paired analysis are in
+[`validation/real_ollama_qwen3_4b_60x2_20260730.json`](validation/real_ollama_qwen3_4b_60x2_20260730.json).
+
+正式活动用本地 Ollama `qwen3:4b` 完成固定 60 个政策案例的两组配对运行，共 120 条完整
+轨迹。代码化组确实执行了数据库真值、服务端时钟与 checklist 门禁，但成功率 91.7%，
+控制组 95.0%，精确配对检验 p=0.6875，未出现显著提升。这是完整而诚实的负结论；
+下文 8 题示例表只用于解释机制，不能当作正式实验结果。
+
 ---
 
 ## English
@@ -63,7 +89,23 @@ Normal and adversarial boundary cases: flexible fare, 24h boundary (5h / 26h), a
 ### Run
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 5 environment
+uv sync --locked --python 3.12 --extra ch5
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/small-model-codified-rules
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env   # set OPENAI_API_KEY (or env vars)
 # Fallback: if OPENAI_API_KEY unset, OPENROUTER_API_KEY routes to OpenRouter
 # (small model gpt-5.6-luna is gpt-5.x → prefer OpenRouter openai/gpt-5.6-luna; large baseline same)
@@ -226,7 +268,23 @@ In **control**, the naive tool refunds—`gpt-5.6-luna` treated unilateral retim
 ### 运行
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 5 章环境
+uv sync --locked --python 3.12 --extra ch5
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.\.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/small-model-codified-rules
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env   # 填入 OPENAI_API_KEY（也可直接用环境变量）
 # 通用兜底：未配置 OPENAI_API_KEY 时，设置 OPENROUTER_API_KEY 即自动改走 OpenRouter
 #（小模型 gpt-5.6-luna 属 gpt-5.x，代码会自动优先走 OpenRouter：openai/gpt-5.6-luna；大模型基线同理）

@@ -13,7 +13,38 @@
 
 On top of “paper → PPT”, the Agent generates **spoken lecture scripts** per slide (guiding narration, not bullet recitation), calls **TTS** for audio, then uses **ffmpeg** to **mux each slide PNG with its audio** into a narrated video.
 
-### Pipeline
+### Canonical manuscript campaign
+
+`campaign.py` is the formal Experiment 5-5 runner. It consumes twelve real
+Slidev screenshots and source from the pinned Experiment 5-4 paper run, calls
+Kimi K3 for narration, independently checks every narration against the actual
+slide pixels with Qwen-VL-Max, synthesizes every accepted page with Fish Audio
+S1, and produces a 5–15 minute H.264/AAC video. It checkpoints every provider
+call so an interrupted run resumes without replacing missing pages with
+silence or generated placeholders.
+
+```bash
+python campaign.py --output validation/runs/my-real-run --workers 1
+```
+
+The formal gate requires 12 distinct rendered pages, live receipts for all
+three providers, per-page A/V drift at most 0.2 seconds, final-duration drift at
+most 0.75 seconds, and a 300–900 second final video. `experiment_protocol.json`
+pins the source pages, models, thresholds, and authorized voice manifest.
+
+The completed canonical run is
+[`validation/runs/exp5-5-kimi-fish-qwen-20260730-v1/manifest.json`](validation/runs/exp5-5-kimi-fish-qwen-20260730-v1/manifest.json)
+(SHA-256 `93bb69a916a76d12de56270928971f6e39f47755214f7a135817d7effd8b3f09`).
+All formal gates passed. The H.264/AAC result is 513.010 seconds (8.55
+minutes), summed page audio is 512.913 seconds, and the maximum measured page
+drift is 0.024 seconds. The rejected real malformed-JSON response for page 12
+is retained beside the successful retry instead of being hidden.
+
+The `demo.py` flow below is retained as a fast teaching/compatibility path. Its
+built-in five-page PIL deck and offline silent audio do **not** satisfy the
+formal manuscript campaign.
+
+### Legacy quick-demo pipeline
 
 ```
 Paper bullets (built-in sample)
@@ -36,7 +67,23 @@ Per-page PNG slides ──► gpt-5.6-luna spoken script ──► OpenAI tts-1 
 ### Run
 
 ```bash
-pip install -r requirements.txt      # Python deps
+# From the repository root: use the shared Chapter 5 environment
+uv sync --locked --python 3.12 --extra ch5
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/paper-to-video
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env                  # OPENAI_API_KEY (or OPENROUTER_API_KEY for script fallback; TTS degrades offline)
 python demo.py                       # full 5-page lecture video
 ```
@@ -91,7 +138,7 @@ Logs print per-page “slide → script → audio duration”; end summary compa
 ### Dependencies
 
 - **ffmpeg / ffprobe** (validated on 8.x). macOS: `brew install ffmpeg`.
-- **Python**: `openai`, `Pillow`, `python-dotenv` (`requirements.txt`).
+- **Python**: root `ch5` extra (`openai`, `Pillow`, `python-dotenv`) or the compatibility `requirements.txt` path.
 - **CJK fonts**: script falls back over common macOS fonts (PingFang / STHeiti / Hiragino / Arial Unicode).
 - **Env**: `OPENAI_API_KEY` for official OpenAI; without it, `OPENROUTER_API_KEY` can fall back for scripts (TTS not on OpenRouter → offline silent). See `env.example`.
 
@@ -123,7 +170,32 @@ Logs print per-page “slide → script → audio duration”; end summary compa
 而非逐条复述要点），调用 **TTS** 合成语音，再用 **ffmpeg** 把 PPT 截图与音频
 **逐页同步合成**为一段带旁白的讲解视频。
 
-### 流程
+### 正式实验活动
+
+`campaign.py` 是实验 5-5 的正式运行器：它读取实验 5-4 固定真实论文活动中的 12 张
+Slidev 截图与源码，用 Kimi K3 生成讲解词，再让 Qwen-VL-Max 对照真实页面像素逐页独立
+审核；通过后调用 Fish Audio S1 合成每页语音，最终用 ffmpeg 生成 5–15 分钟的 H.264/AAC
+视频。所有供应商调用都可续跑缓存；中断后不会用静音或占位内容冒充缺失页面。
+
+```bash
+python campaign.py --output validation/runs/my-real-run --workers 1
+```
+
+正式门禁要求：12 张互不相同的真实渲染页、三个真实供应商的完整收据、逐页音画误差不超过
+0.2 秒、总时长误差不超过 0.75 秒、最终视频时长 300–900 秒。固定来源页、模型、阈值与
+授权音色清单记录在 `experiment_protocol.json`。
+
+已完成的正式证据是
+[`validation/runs/exp5-5-kimi-fish-qwen-20260730-v1/manifest.json`](validation/runs/exp5-5-kimi-fish-qwen-20260730-v1/manifest.json)
+（SHA-256 `93bb69a916a76d12de56270928971f6e39f47755214f7a135817d7effd8b3f09`）。
+所有门禁均通过；H.264/AAC 成片长 513.010 秒（8.55 分钟），逐页音频合计
+512.913 秒，最大逐页漂移 0.024 秒。第 12 页真实供应商返回的非法 JSON
+作为失败尝试与成功重试一并保留，没有被隐藏。
+
+下述 `demo.py` 流程保留为快速教学/兼容入口。其内置 5 页 PIL 幻灯片和离线静音模式
+**不满足**正式实验门禁。
+
+### 旧版快速演示流程
 
 ```
 论文要点(内置示例)
@@ -148,7 +220,23 @@ Logs print per-page “slide → script → audio duration”; end summary compa
 ### 运行命令
 
 ```bash
-pip install -r requirements.txt      # 安装 Python 依赖
+# 在仓库根目录使用统一的第 5 章环境
+uv sync --locked --python 3.12 --extra ch5
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.\.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/paper-to-video
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env                  # 填入 OPENAI_API_KEY（未配置时设 OPENROUTER_API_KEY 兜底讲解词，TTS 降级为离线占位）
 python demo.py                       # 生成全部 5 页的完整讲解视频
 ```
@@ -210,7 +298,7 @@ ffprobe -v error -show_format -show_streams output/lecture.mp4
 ### 依赖
 
 - **ffmpeg / ffprobe**：命令行工具（本项目用 8.x 验证）。macOS 可 `brew install ffmpeg`。
-- **Python 包**：`openai`、`Pillow`、`python-dotenv`（见 `requirements.txt`）。
+- **Python 包**：根目录 `ch5` extra（`openai`、`Pillow`、`python-dotenv`），或兼容 `requirements.txt` 路径。
 - **中文字体**：渲染幻灯片需系统中文字体，脚本已按 macOS 常见字体
   （PingFang / STHeiti / Hiragino / Arial Unicode）自动回退。
 - **环境变量**：需 `OPENAI_API_KEY`（走官方 OpenAI）；未配置时可用 `OPENROUTER_API_KEY` 兜底讲解词生成（此时 TTS 因不在 OpenRouter 上而降级为离线静音占位）。可选项见 `env.example`。

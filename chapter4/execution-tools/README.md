@@ -1,9 +1,19 @@
 # Execution Tools MCP Server / 执行工具 MCP 服务器
 
-> Companion code for *AI Agents in Depth*, Chapter 4 — **Experiment 4-2 ★★**. MCP execution tools with LLM approval, auto-verification, and long-output truncation/persist.  
-> 配套《深入理解 AI Agent》第 4 章 **实验 4-2 ★★**。带 LLM 事前审批、自动校验、长输出截断与持久化的执行工具 MCP 服务器。
+> Companion code for *AI Agents in Depth*, Chapter 4 — **Experiment 4-4 ★★**. MCP execution tools with LLM approval, auto-verification, and long-output truncation/persist.  
+> 配套《深入理解 AI Agent》第 4 章 **实验 4-4 ★★**。带 LLM 事前审批、自动校验、长输出截断与持久化的执行工具 MCP 服务器。
 
 ← [Chapter 4 index / 返回第 4 章目录](../README.md)
+
+## Code map
+
+- **Run first:** `python cli.py demo` (offline end-to-end path).
+- **Start here:** `cli.py::cmd_demo` constructs `ExecutionTools`; `execution_tools.py::ExecutionTools` is the shared execution surface.
+- **Core behavior:** `file_tools.py::FileTools`, `terminal_controller.py::TerminalController` and `multilang_executor.py::LanguageExecutor` implement validation, execution and output handling.
+- **State / protocol:** `experiment_protocol.json`, workspace boundaries, approval flags and structured tool-result fields.
+- **Verifier:** `test_execution_tools.py`, `test_file_tools.py`, `test_terminal_controller.py` and `run_experiment_4_4.py` acceptance gates.
+- **Experiment variable:** approval, syntax verification, long-output summarization/truncation and sandbox settings.
+- **Skip on first pass:** MCP transport, calendar/GitHub integrations and provider-specific LLM adapters.
 
 ---
 
@@ -11,7 +21,7 @@
 
 An MCP (Model Context Protocol) server that provides comprehensive execution tools with built-in safety mechanisms for AI agents.
 
-This project corresponds to Experiment 4-2 in the book’s “Execution Tools” section. It focuses on layered safety (input validation, permission control, LLM pre-approval), automatic syntax verification and feedback loops, and truncation plus persistence of long outputs. Recommended start: `python cli.py demo`.
+This project corresponds to Experiment 4-4 in the book’s “Execution Tools” section. It focuses on layered safety (input validation, permission control, LLM pre-approval), automatic syntax verification and feedback loops, and truncation plus persistence of long outputs. Recommended start: `python cli.py demo`.
 
 ### Features
 
@@ -38,7 +48,22 @@ This project corresponds to Experiment 4-2 in the book’s “Execution Tools”
 ### Installation
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 4 environment
+uv sync --locked --python 3.12 --extra ch4
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch4]"
+
+cd chapter4/execution-tools
+
+# Exact legacy parity path, including optional scientific/ML spreadsheet packages:
+# python -m pip install -r requirements.txt
 ```
 
 ### Configuration
@@ -55,6 +80,9 @@ PROVIDER=kimi
 
 # API Keys (set the one for your provider)
 KIMI_API_KEY=your_kimi_key
+# DashScope / Bailian (Qwen)
+# PROVIDER=dashscope  # qwen and bailian are accepted aliases
+# DASHSCOPE_API_KEY=your_dashscope_key
 # SILICONFLOW_API_KEY=your_siliconflow_key
 # DOUBAO_API_KEY=your_doubao_key
 # OPENROUTER_API_KEY=your_openrouter_key
@@ -78,6 +106,7 @@ AUTO_VERIFY_CODE=true
 
 **Supported Providers:**
 - `siliconflow`: Qwen/Qwen3-235B-A22B-Thinking-2507
+- `dashscope` / `qwen` / `bailian`: qwen3.7-plus (Alibaba Cloud Model Studio)
 - `doubao`: doubao-seed-1-6-thinking-250715  
 - `kimi`/`moonshot`: kimi-k3
 - `openrouter`: google/gemini-3.5-flash (or openai/gpt-5.6-luna, anthropic/claude-sonnet-4.6)
@@ -193,6 +222,39 @@ The server implements a layered architecture:
 3. **Verification Layer**: Validates outputs and provides feedback
 4. **Integration Layer**: Connects to external services
 
+### Real desktop and Android environments
+
+The exact Experiment 4-4 runner includes two action probes instead of treating
+installed packages as execution evidence:
+
+- `virtual_desktop_execute` starts a bounded Xvfb display and headful Chromium,
+  enters an HTTPS URL through `xdotool` keyboard events, verifies the resulting
+  window title, and hashes a real framebuffer screenshot captured by FFmpeg.
+- `virtual_mobile_execute` connects to a running AndroidWorld Docker emulator,
+  opens Android Wi-Fi Settings through ADB, verifies the focused activity,
+  captures and hashes its pixels, then returns to the launcher with a real
+  input event.
+
+The AndroidWorld image is external and is not vendored. With a populated image
+available locally, start an API-33 emulator with KVM and run the campaign:
+
+```bash
+docker run -d --name exp4-4-android --privileged --device /dev/kvm \
+  -p 127.0.0.1:5000:5000 android_world_patched:populated3
+
+python run_experiment_4_4.py \
+  --android-container exp4-4-android \
+  --github-head-branch <pushed-experiment-branch> \
+  --github-base-branch <base-branch>
+```
+
+The host desktop path requires `Xvfb`, `xdotool`, FFmpeg, and Chromium; the
+spreadsheet screenshot gate additionally requires LibreOffice Calc. GitHub PR
+creation queries for an existing head/base PR before mutation, so a campaign
+retry verifies and reuses the first PR instead of creating a duplicate.
+External Calendar, GitHub, and email mutations remain credential-gated and are
+reported as blocked if their real providers are unavailable.
+
 ### Examples
 
 See `examples.py` for comprehensive usage examples.
@@ -203,7 +265,7 @@ See `examples.py` for comprehensive usage examples.
 
 为 AI Agent 提供带内置安全机制的综合执行工具 MCP（Model Context Protocol）服务器。
 
-本项目对应书中第 4 章「执行工具」一节的实验 4-2，聚焦执行工具的安全机制：
+本项目对应书中第 4 章「执行工具」一节的实验 4-4，聚焦执行工具的安全机制：
 分层安全防护（输入验证、权限控制、LLM 事前审批）、自动语法验证与反馈闭环、
 以及长输出的截断与持久化。推荐从 `python cli.py demo` 开始。
 
@@ -232,7 +294,22 @@ See `examples.py` for comprehensive usage examples.
 ### 安装
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 4 章环境
+uv sync --locked --python 3.12 --extra ch4
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch4]"
+
+cd chapter4/execution-tools
+
+# 精确复现旧版单项目环境，含可选科学计算/机器学习/表格处理依赖：
+# python -m pip install -r requirements.txt
 ```
 
 ### 配置
@@ -249,6 +326,9 @@ PROVIDER=kimi
 
 # API Keys (set the one for your provider)
 KIMI_API_KEY=your_kimi_key
+# DashScope / Bailian (Qwen)
+# PROVIDER=dashscope  # qwen and bailian are accepted aliases
+# DASHSCOPE_API_KEY=your_dashscope_key
 # SILICONFLOW_API_KEY=your_siliconflow_key
 # DOUBAO_API_KEY=your_doubao_key
 # OPENROUTER_API_KEY=your_openrouter_key
@@ -272,6 +352,7 @@ AUTO_VERIFY_CODE=true
 
 **支持的 Provider：**
 - `siliconflow`：Qwen/Qwen3-235B-A22B-Thinking-2507
+- `dashscope` / `qwen` / `bailian`：qwen3.7-plus（阿里云百炼 / Model Studio）
 - `doubao`：doubao-seed-1-6-thinking-250715  
 - `kimi`/`moonshot`：kimi-k3
 - `openrouter`：google/gemini-3.5-flash（或 openai/gpt-5.6-luna、anthropic/claude-sonnet-4.6）

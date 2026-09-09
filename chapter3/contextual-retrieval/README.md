@@ -1,13 +1,23 @@
 # Contextual Retrieval System / 上下文感知检索系统
 
-> Companion material for *AI Agents in Depth*, Chapter 3 — **Experiment 3-11**: Anthropic-style contextual prefixes before indexing; offline BM25 recall@k compare.  
-> 配套《深入理解 AI Agent》第 3 章 **实验 3-11**：索引前为分块生成上下文前缀；离线 BM25 recall@k 对比。
+> Companion material for *AI Agents in Depth*, Chapter 3 — **Experiment 3-10**: Anthropic-style contextual prefixes before indexing; offline BM25 recall@k compare.  
+> 配套《深入理解 AI Agent》第 3 章 **实验 3-10**：索引前为分块生成上下文前缀；离线 BM25 recall@k 对比。
 
 ← [Chapter 3 index / 返回第 3 章目录](../README.md)
 
 ---
 
 ## English
+
+### Canonical live campaign
+
+`python campaign.py` regenerates every prefix live from the full source
+document plus its target chunk, then compares the same 15 labeled queries over
+plain/contextual BM25, dense Qwen3 embeddings, and RRF hybrid indexes. It records
+recall@1/3/5, MRR, model revision, index-time usage/cost assumptions, source
+hashes, and raw ARK receipts in `validation/runs/<run-id>/`; the canonical
+pointer is `validation/latest.json`. `compare_retrieval.py` remains the small
+offline demonstration and is not accepted as the canonical live result.
 
 ### Overview
 
@@ -19,7 +29,7 @@ Educational implementation of Anthropic’s Contextual Retrieval: prepend chunk-
 
 **Solution:** Generate short explanatory context per chunk and prepend it before indexing so BM25 and embeddings keep identity signals.
 
-### Core offline experiment (Experiment 3-11)
+### Core offline experiment (Experiment 3-10)
 
 `compare_retrieval.py` quantifies the claim **fully offline**: same chunks indexed two ways—plain (raw text only) vs contextual (LLM-generated prefix + text)—then compares `recall@k` on `evaluation/retrieval_eval.json` (15 queries + human gold chunks). **No API or retrieval service** (BM25 + jieba).
 
@@ -71,7 +81,23 @@ Document → Basic Chunking → Context Generation (optional LLM)
 ### Quick start
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 3 environment
+uv sync --locked --python 3.12 --extra ch3
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch3]"
+
+cd chapter3/contextual-retrieval
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # MOONSHOT_API_KEY / ARK_API_KEY / OPENAI_API_KEY / etc.
 
@@ -132,7 +158,7 @@ Anthropic 上下文感知检索的教学实现：在嵌入/建索引前为每个
 **问题：** 传统 RAG 分块后丢失语境。「公司收入增长 3%」不知是哪家公司、哪个时期。  
 **方案：** 为每块生成简短解释性上下文并前置，使 BM25 与向量都能保留身份信号。
 
-### 核心实验：离线量化召回提升（实验 3-11）
+### 核心实验：离线量化召回提升（实验 3-10）
 
 `compare_retrieval.py` **完全离线**量化：同一批文本块分别以无上下文 / 有上下文前缀两种方式建 BM25 索引，在 `evaluation/retrieval_eval.json`（15 查询 + 人工 gold 块）上比较 `recall@k`。**无需 API 或检索服务**（BM25 + jieba）。
 
@@ -173,7 +199,23 @@ python compare_retrieval.py --help
 ### 快速开始
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 3 章环境
+uv sync --locked --python 3.12 --extra ch3
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch3]"
+
+cd chapter3/contextual-retrieval
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 
 # 另开一个终端运行完整检索流水线：
@@ -206,4 +248,4 @@ python main.py --query "宪法第一条是什么" --mode compare
 
 ### OpenRouter 通用回退 / Universal OpenRouter fallback
 
-Chat LLM falls back to OpenRouter when primary keys are missing and `OPENROUTER_API_KEY` is set. See `env.example`. Related: [`../contextual-retrieval-for-user-memory/`](../contextual-retrieval-for-user-memory/) (Exp. 3-12).
+Chat LLM falls back to OpenRouter when primary keys are missing and `OPENROUTER_API_KEY` is set. See `env.example`. Related: [`../contextual-retrieval-for-user-memory/`](../contextual-retrieval-for-user-memory/) (Exp. 3-11).

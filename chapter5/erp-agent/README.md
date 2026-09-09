@@ -38,12 +38,28 @@ Dept A = 研发部 (R&D), B = 销售部 (Sales) (fixed in the prompt).
 ### Run
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 5 environment
+uv sync --locked --python 3.12 --extra ch5
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/erp-agent
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env      # OPENAI_API_KEY
 python demo.py           # same as python demo.py run
 ```
 
-**OpenRouter fallback**: if `OPENAI_API_KEY` unset, set `OPENROUTER_API_KEY` (`gpt-*` → `openai/*`, else `openai/gpt-5.6-luna`). Default `gpt-5.6-luna` is gpt-5.x (org verification on direct OpenAI), so with `OPENROUTER_API_KEY` OpenRouter is preferred.
+**OpenRouter fallback**: if `OPENAI_API_KEY` unset, set `OPENROUTER_API_KEY` (`gpt-*` → `openai/*`, `kimi-*` → `moonshotai/*`, `gemini-*` → `google/*`, …; an unmapped id is sent as asked and rejected by name). Default `gpt-5.6-luna` is gpt-5.x (org verification on direct OpenAI), so with `OPENROUTER_API_KEY` OpenRouter is preferred.
 
 `demo.py` has 4 subcommands (no subcommand = `run`):
 
@@ -124,13 +140,30 @@ Agent 只负责「生成 SQL」这个制品，真正的数据查询交给数据�
 ### 运行
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 5 章环境
+uv sync --locked --python 3.12 --extra ch5
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.\.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/erp-agent
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env      # 填入 OPENAI_API_KEY
 python demo.py           # 等价于 python demo.py run
 ```
 
 **通用 OpenRouter 兜底**：未配置 `OPENAI_API_KEY` 时，设置 `OPENROUTER_API_KEY` 即自动
-改走 OpenRouter（`gpt-*` → `openai/*`，其它 → `openai/gpt-5.6-luna`）。默认模型
+改走 OpenRouter（`gpt-*` → `openai/*`、`kimi-*` → `moonshotai/*`、`gemini-*` → `google/*` 等；
+映射不到的 id 按原名发出并由 OpenRouter 报错）。默认模型
 `gpt-5.6-luna` 属 gpt-5.x，直连 OpenAI 需组织实名认证，故设置了 `OPENROUTER_API_KEY`
 时会优先走 OpenRouter。
 

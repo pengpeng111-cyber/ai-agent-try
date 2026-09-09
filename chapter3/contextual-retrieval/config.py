@@ -4,6 +4,9 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional, Dict, Any
 from enum import Enum
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def _openrouter_model_id(model: Optional[str]) -> str:
@@ -32,6 +35,7 @@ def _openrouter_model_id(model: Optional[str]) -> str:
 
 class Provider(str, Enum):
     """Supported LLM providers"""
+    DASHSCOPE = "dashscope"  # Alibaba Cloud Model Studio / Bailian (Qwen)
     SILICONFLOW = "siliconflow"
     DOUBAO = "doubao"
     KIMI = "kimi"
@@ -63,6 +67,13 @@ class LLMConfig:
     
     # Provider-specific defaults
     PROVIDER_DEFAULTS = {
+        "dashscope": {
+            "model": "qwen3.7-plus",
+            "base_url": os.getenv(
+                "DASHSCOPE_BASE_URL",
+                "https://dashscope.aliyuncs.com/compatible-mode/v1",
+            ),
+        },
         "siliconflow": {
             "model": "Qwen/Qwen3-235B-A22B-Thinking-2507",
             "base_url": "https://api.siliconflow.cn/v1"
@@ -105,6 +116,9 @@ class LLMConfig:
     def get_api_key(cls, provider: str) -> Optional[str]:
         """Get API key from environment"""
         env_mappings = {
+            "dashscope": "DASHSCOPE_API_KEY",
+            "qwen": "DASHSCOPE_API_KEY",
+            "bailian": "DASHSCOPE_API_KEY",
             "siliconflow": "SILICONFLOW_API_KEY",
             "doubao": "ARK_API_KEY",
             "kimi": "MOONSHOT_API_KEY",
@@ -120,6 +134,9 @@ class LLMConfig:
     def get_client_config(self) -> Dict[str, Any]:
         """Get OpenAI client configuration"""
         provider_lower = self.provider.lower()
+        provider_lower = {"qwen": "dashscope", "bailian": "dashscope"}.get(
+            provider_lower, provider_lower
+        )
         defaults = self.PROVIDER_DEFAULTS.get(provider_lower, {})
         
         # Get API key

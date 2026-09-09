@@ -27,10 +27,25 @@
 ### Installation
 
 ```bash
+# From the repository root: use the shared Chapter 3 environment
+uv sync --locked --python 3.12 --extra ch3
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch3]"
+
 cd chapter3/memobase
-pip install -r requirements.txt
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env
-# Add Kimi API key (hand-rolled agent)
+# Set KIMI_API_KEY, or use LLM_PROVIDER=dashscope/qwen/bailian with DASHSCOPE_API_KEY
 ```
 
 Edit `config.py` for model, memory thresholds, benchmark, logging.
@@ -71,14 +86,18 @@ Extra: `--api-key KEY`, `--no-memory`, `--verbose`.
 Memobase extracts **server-side**; you need a reachable service:
 
 - **Self-hosted**: [memodb-io/memobase](https://github.com/memodb-io/memobase) (docker compose). Default `http://localhost:8019`, token `secret`. Extraction model is in the **server’s** `.env` / `config.yaml` (`--model` on the client is informational only).  
-- **Cloud**: `project_url` + `api_key` from https://www.memobase.io  
+- **Cloud**: `project_url` + `api_key` from https://www.memobase.ai  
 
 Client: `--project-url` / `--api-key` or `MEMOBASE_PROJECT_URL` / `MEMOBASE_API_KEY` (see `env.example`).
 
 #### Running
 
 ```bash
-pip install -r requirements.txt
+# From the repository root, after installing and activating the shared `ch3` environment above:
+cd chapter3/memobase
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
 
 python profile_demo.py
 python profile_demo.py --dry-run
@@ -108,7 +127,7 @@ Benchmark outputs under `benchmark_results/`. Extend tools / memory types in `co
 
 ### Troubleshooting
 
-1. API key: `KIMI_API_KEY` in `.env`  
+1. API key: `KIMI_API_KEY` in `.env`, or `DASHSCOPE_API_KEY` with `LLM_PROVIDER=dashscope`
 2. Memory overflow: lower `MAX_MEMORY_ENTRIES`, more aggressive compression, manual consolidation  
 3. Slow: reduce `MODEL_MAX_TOKENS`, enable cache, category-specific benchmarks  
 
@@ -135,10 +154,25 @@ MIT-style educational use. Kimi by Moonshot AI; Memobase concepts; LOCOMO-inspir
 ### 安装
 
 ```bash
+# 在仓库根目录使用统一的第 3 章环境
+uv sync --locked --python 3.12 --extra ch3
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch3]"
+
 cd chapter3/memobase
-pip install -r requirements.txt
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env
-# 手写 Agent 填写 Kimi API Key
+# 手写 Agent 可填写 KIMI_API_KEY；也可用 LLM_PROVIDER=dashscope 与 DASHSCOPE_API_KEY
 ```
 
 在 `config.py` 中调整模型、记忆阈值、基准与日志。
@@ -168,14 +202,18 @@ python main.py --mode task --task "Plan a 7-day trip to Japan with a $3000 budge
 抽取在**服务端**完成，需要可访问的 Memobase：
 
 - **自托管**：[memodb-io/memobase](https://github.com/memodb-io/memobase)（docker compose）。默认 `http://localhost:8019`，token `secret`。抽取模型在**服务端**配置。  
-- **云端**：https://www.memobase.io 的 `project_url` + `api_key`  
+- **云端**：https://www.memobase.ai 的 `project_url` + `api_key`  
 
 客户端：`--project-url` / `--api-key` 或 `MEMOBASE_PROJECT_URL` / `MEMOBASE_API_KEY`。
 
 #### 运行
 
 ```bash
-pip install -r requirements.txt
+# 在上方安装并激活统一 `ch3` 环境后，从仓库根目录进入本项目：
+cd chapter3/memobase
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
 
 python profile_demo.py
 python profile_demo.py --dry-run

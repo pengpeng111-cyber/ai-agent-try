@@ -1,13 +1,35 @@
 # System-Hint Enhanced AI Agent / Agent 状态栏（System Hint）实验
 
-> Companion material for *AI Agents in Depth*, Chapter 2 — **Experiment 2-8 ★★: Useful Agent status-bar techniques**.  
-> 配套《深入理解 AI Agent》第 2 章 **实验 2-8 ★★：几种好用的 Agent 状态栏技术**。
+> Companion material for *AI Agents in Depth*, Chapter 2 — **Experiment 2-9 ★★: Useful Agent status-bar techniques**.
+> 配套《深入理解 AI Agent》第 2 章 **实验 2-9 ★★：几种好用的 Agent 状态栏技术**。
 
 ← [Chapter 2 index / 返回第 2 章目录](../README.md)
 
 ---
 
 ## English
+
+### Canonical matched campaign
+
+The preview and interactive demo below illustrate the mechanism, but the
+manuscript-grade Experiment 2-9 evidence comes from the frozen matched campaign:
+
+```bash
+python run_experiment_2_8.py \
+  --output runs/exp2-8-kimi-k3-$(date +%Y%m%d-%H%M%S)
+```
+
+It runs five real Moonshot `kimi-k3` cases for every preregistered contrast:
+disabled vs raw timestamps, guided timestamps, tool counter, TODO list,
+detailed errors, system state, and all features combined. Arms alternate order
+within each case. Every run uses an isolated local sandbox and is scored from
+tool actions and filesystem state, not from the model's self-report. The runner
+checkpoints after each accepted response and tool event, resumes without
+regenerating completed cases, retains response IDs/usage/raw protocol, prices
+usage in native CNY, hashes all evidence, and scans it for credentials. See
+`experiment_protocol.json` for the frozen cases and claim policy; the historical
+15-vs-21, 60%-vs-95%, and six-model time-sense figures are not relabeled as
+results from this smaller suite.
 
 ### Overview
 
@@ -62,11 +84,30 @@ Renders five techniques (timestamps, tool-call counter, TODO list, detailed erro
 ### Quick start
 
 ```bash
+# From the repository root: use the shared Chapter 2 environment
+uv sync --locked --python 3.12 --extra ch2
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch2]"
+
 cd chapter2/system-hint
-pip install -r requirements.txt
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env
-# Edit .env with your KIMI_API_KEY
+# Edit .env with your provider key (Kimi or DashScope/Bailian)
 export KIMI_API_KEY='your-api-key-here'
+
+# Alibaba Cloud Model Studio / Bailian (Qwen):
+# export LLM_PROVIDER=dashscope
+# export DASHSCOPE_API_KEY='your-dashscope-api-key-here'
 ```
 
 > **OpenRouter fallback:** If `KIMI_API_KEY` is unset but `OPENROUTER_API_KEY` is set, the experiment uses OpenRouter (`kimi-*` → `moonshotai/kimi-k2`). With `KIMI_API_KEY` set, behavior is unchanged.
@@ -242,7 +283,7 @@ python test_basic.py
 
 ### 概述
 
-对应书中 **实验 2-8：几种好用的 Agent 状态栏技术**（「Agent 状态栏 / Agent Status Bar」一节）。本目录即书中所说的 `agent-status-bar` 实验框架——「system hint（系统提示）」与「Agent 状态栏（status bar）」是同一概念的两种叫法：在上下文末尾以一条 `role=user` 的消息注入动态状态摘要。
+对应书中 **实验 2-9：几种好用的 Agent 状态栏技术**（「Agent 状态栏 / Agent Status Bar」一节）。本目录即书中所说的 `agent-status-bar` 实验框架——「system hint（系统提示）」与「Agent 状态栏（status bar）」是同一概念的两种叫法：在上下文末尾以一条 `role=user` 的消息注入动态状态摘要。
 
 本实验演示如何用系统提示改善 Agent 轨迹、减少无限循环、上下文感知不足与任务管理混乱，并自动保存轨迹便于调试。
 
@@ -293,8 +334,23 @@ python main.py --mode preview
 ### 快速开始
 
 ```bash
+# 在仓库根目录使用统一的第 2 章环境
+uv sync --locked --python 3.12 --extra ch2
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch2]"
+
 cd chapter2/system-hint
-pip install -r requirements.txt
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # 编辑 .env，填入 KIMI_API_KEY
 export KIMI_API_KEY='your-api-key-here'

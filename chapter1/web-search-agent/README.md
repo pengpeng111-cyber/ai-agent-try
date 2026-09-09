@@ -1,6 +1,6 @@
 # Kimi Web Search Agent / Kimi 网络搜索 Agent
 
-> Autonomous ReAct web-search agent on Kimi K3 with built-in `$web_search` (multi-round search + synthesis).  
+> Autonomous ReAct web-search agent on Kimi K3 using Moonshot's official Formula API (multi-round search + synthesis).
 > 配套《深入理解 AI Agent》第 1 章 **实验 1-2 ★：Kimi K3 原生 Agent 能力**。
 
 ← [Chapter 1 index / 返回第 1 章目录](../README.md) · 📖 [Read the chapter / 读本章正文](../../book/chapter1.md)（[EN](../../book-en/chapter1.md)）
@@ -11,45 +11,47 @@
 
 ### Overview
 
-This project implements an autonomous AI agent that uses Kimi (Moonshot AI) built-in web tools (`$web_search` / crawl-style search) to:
+This project implements an autonomous AI agent that uses Kimi K3 and Moonshot's
+official `moonshot/web-search:latest` Formula to:
 
 - **Understand the question**: analyze the user query and identify information needs
-- **Search automatically**: fetch live web information via Kimi’s built-in `$web_search` tool
+- **Search automatically**: fetch live web information through the standard `web_search` function declaration and Formula Fibers
 - **Iterate**: call search multiple times until evidence is sufficient
 - **Synthesize**: combine multi-source results into a clear, accurate answer
 
 It demonstrates the “Model as Agent” idea and the ReAct loop (think → act → observe).
 
-### Kimi web-search service status
+### Exact Formula route
 
-This example depends on Kimi's hosted `$web_search` service. The repository only
-passes the built-in tool's arguments back to Kimi; it does not execute a search
-engine locally.
+Kimi K3's current official hosted-search route is not the legacy
+`builtin_function` passthrough. Every independent question performs this exact
+provider-controlled sequence:
 
-Kimi's [official web-search documentation](https://platform.kimi.ai/docs/guide/use-web-search)
-currently says that the service is being updated, advises against using it in the
-near term, and asks developers to follow later documentation updates. Check that
-page for the latest status before troubleshooting this example.
+1. `GET /v1/formulas/moonshot/web-search:latest/tools` obtains Moonshot's
+   authoritative standard `function` declaration named `web_search`.
+2. The declaration is sent unchanged to `POST /v1/chat/completions` with the
+   conversation. Kimi decides whether and how often to call it.
+3. For each model tool call, the implementation passes the returned `name` and
+   raw serialized `arguments` unchanged to
+   `POST /v1/formulas/moonshot/web-search:latest/fibers`.
+4. Only HTTP-successful Fibers with `status == "succeeded"` are accepted. Their
+   `context.output` (or encrypted output) is returned as the matching tool result.
 
-If a tool observation contains only a `search_id`, for example
-`{"search_result": {"search_id": "..."}}`, but no search-result content:
-
-1. Check Kimi's web-search documentation for the current service status.
-2. Retry later, or use `python main.py --provider offline-demo` to inspect the
-   ReAct flow without calling the hosted service.
-3. Treat the response as a possible external tool/API availability issue; by
-   itself, it does not show that the agent loop or local implementation is broken.
+The search engine remains hosted by Moonshot; this repository does not replace
+it with a local or third-party search implementation. See the official
+[Formula tool guide](https://platform.kimi.ai/docs/guide/use-official-tools)
+and [web-search guide](https://platform.kimi.ai/docs/guide/use-web-search).
 
 ### Architecture
 
 ```mermaid
 graph TD
     A[User question] --> B{Agent thinks}
-    B -->|needs search| C[Call $web_search]
-    C --> D[Kimi search backend]
-    D --> E[Search results]
+    B -->|needs search| C[Model calls web_search]
+    C --> D[POST Formula Fiber]
+    D --> E[Return Fiber output]
     E --> F{Enough info?}
-    F -->|no| G[Call $web_search again]
+    F -->|no| G[Call web_search again]
     G --> H[More information]
     H --> F
     F -->|yes| I[Final answer]
@@ -61,7 +63,23 @@ graph TD
 #### 1. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+# Recommended from the repository root: use the shared Chapter 1 environment
+uv sync --locked --extra ch1
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch1]"
+
+# Enter this experiment directory for the commands below
+cd chapter1/web-search-agent
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
 ```
 
 #### 2. Configure API Key
@@ -80,7 +98,12 @@ MOONSHOT_API_KEY=your-api-key-here
 
 **Note**: For backward compatibility, `KIMI_API_KEY` is also accepted.
 
-**Universal OpenRouter fallback**: if neither `MOONSHOT_API_KEY` nor `KIMI_API_KEY` is set but `OPENROUTER_API_KEY` is, requests go through OpenRouter using `OPENROUTER_MODEL` (default `openai/gpt-5.6-luna`). **Important limit**: Kimi’s built-in `$web_search` is Moonshot-only and is **not** available on OpenRouter—fallback mode answers from the model’s knowledge only, **without live web search**. Use a Moonshot key for real online search.
+**Universal OpenRouter fallback**: if neither `MOONSHOT_API_KEY` nor
+`KIMI_API_KEY` is set but `OPENROUTER_API_KEY` is, requests go through
+OpenRouter using `OPENROUTER_MODEL` (default `openai/gpt-5.6-luna`). Moonshot
+Formula declarations and Fibers are not exposed through OpenRouter, so fallback
+mode answers from model knowledge without live Formula search. It is useful for
+interface diagnostics only and cannot satisfy Experiment 1-2 acceptance.
 
 #### 3. Run the Agent
 
@@ -93,7 +116,7 @@ python main.py --help
 | Flag | Description | Default |
 |------|-------------|---------|
 | `query` | Question (positional); omit for interactive mode | none |
-| `--provider` | Backend: `kimi` (built-in `$web_search`, needs API key) / `offline-demo` (offline sample trace) | `kimi` |
+| `--provider` | Backend: `kimi` (Moonshot Formula `web_search`, needs API key) / `offline-demo` (offline sample trace) | `kimi` |
 | `--model` | Model name | `kimi-k3` |
 | `--max-steps` | Max ReAct iterations | `5` |
 | `--base-url` | API base URL | `https://api.moonshot.cn/v1` |
@@ -132,7 +155,7 @@ python quickstart.py
 python examples.py
 ```
 
-> At runtime the agent prints a **ReAct trace**: 💭 think → 🔧 act (`$web_search`) → 👀 observe (results) → ✅ final answer. Use `agent.get_trace()` for a structured trace, or `--output` to save JSON.
+> At runtime the agent prints a **ReAct trace**: 💭 think → 🔧 act (`web_search`) → 👀 observe (Formula output) → ✅ final answer. Use `agent.get_trace()` for a structured trace, or `--output` to save JSON.
 
 ### Usage Examples
 
@@ -218,7 +241,7 @@ Includes:
 | `KIMI_BASE_URL` | API base URL | `https://api.moonshot.cn/v1` |
 | `DEFAULT_MODEL` | Default model | `kimi-k3` |
 | `MAX_SEARCH_ITERATIONS` | Max search iterations (in Config) | 5 |
-| `SEARCH_TIMEOUT` | Search timeout (seconds) | 30 |
+| `SEARCH_TIMEOUT` | Per-request timeout in seconds, for both the Formula tool call and the chat completion | 180 |
 | `temperature` | Generation creativity | 0.6 |
 
 ### Technical Notes
@@ -253,8 +276,9 @@ Includes:
 
 1. **API limits**: respect Kimi quotas and rate limits
 2. **Search quality**: depends on Kimi’s search capability
-3. **Latency**: web search can take time
-4. **Accuracy**: double-check critical facts; the agent may still err
+3. **Latency**: web search can take time, and `kimi-k3` runs with `reasoning_effort=max`, so a single completion often takes one to a few minutes — hence the 180 s default `SEARCH_TIMEOUT`
+4. **Rate limits**: on a 429 the SDK retries automatically; if the retries use up the timeout budget you will see a timeout rather than a rate-limit error, so check the log for `429` before raising `SEARCH_TIMEOUT`
+5. **Accuracy**: double-check critical facts; the agent may still err
 
 ### Usage tips
 
@@ -322,7 +346,23 @@ graph TD
 #### 1. 安装依赖
 
 ```bash
-pip install -r requirements.txt
+# 推荐在仓库根目录使用统一的第 1 章环境
+uv sync --locked --extra ch1
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch1]"
+
+# 进入本实验目录，后续命令都在这里运行
+cd chapter1/web-search-agent
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
 ```
 
 #### 2. 配置 API Key
@@ -479,7 +519,7 @@ python examples.py
 | `KIMI_BASE_URL` | API 基础 URL | `https://api.moonshot.cn/v1` |
 | `DEFAULT_MODEL` | 默认模型 | `kimi-k3` |
 | `MAX_SEARCH_ITERATIONS` | 最大搜索迭代次数（Config 中设置） | 5 |
-| `SEARCH_TIMEOUT` | 搜索超时时间（秒） | 30 |
+| `SEARCH_TIMEOUT` | 单次请求超时（秒），同时作用于 Formula 工具调用与 chat completion | 180 |
 | `temperature` | 控制生成内容的创造性 | 0.6 |
 
 ### 技术特点
@@ -514,8 +554,9 @@ python examples.py
 
 1. **API 限制**: 请注意 Kimi API 的调用限制和配额
 2. **搜索质量**: 搜索结果质量依赖于 Kimi 的搜索能力
-3. **响应时间**: 网络搜索可能需要一定时间，请耐心等待
-4. **内容准确性**: Agent 会尽力提供准确信息，但建议对重要信息进行二次验证
+3. **响应时间**: 网络搜索本身需要时间，而 `kimi-k3` 以 `reasoning_effort=max` 运行，单次调用常需一到数分钟，因此 `SEARCH_TIMEOUT` 默认为 180 秒
+4. **速率限制**: 遇到 429 时 SDK 会自动重试，重试若把超时预算耗完，最终报出的是超时而不是速率限制；调大 `SEARCH_TIMEOUT` 之前，先看日志里有没有 `429`
+5. **内容准确性**: Agent 会尽力提供准确信息，但建议对重要信息进行二次验证
 
 ### 使用建议
 

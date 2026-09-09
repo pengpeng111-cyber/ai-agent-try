@@ -1,4 +1,4 @@
-# Experiment 3-12: Contextual Retrieval for User Memory / 实验 3-12：利用上下文感知检索增强用户记忆
+# Experiment 3-11: Contextual Retrieval for User Memory / 实验 3-11：利用上下文感知检索增强用户记忆
 
 > Companion material for *AI Agents in Depth*, Chapter 3 — dual-layer memory: Contextual RAG + Advanced JSON Cards.  
 > 配套《深入理解 AI Agent》第 3 章——双层记忆：上下文感知 RAG + Advanced JSON Cards。
@@ -8,6 +8,16 @@
 ---
 
 ## English
+
+### Canonical live campaign
+
+`python campaign.py` evaluates all 60 three-layer cases with a preregistered
+plain/contextual/dual-layer ablation. A live ReAct planner's exact queries are
+replayed across plain and contextual fixed-window indexes; the dual arm adds
+the live Advanced JSON Card checkpoint from Experiment 3-1. Prefixes, cards,
+raw chunks, trajectories, per-layer external-judge metrics, and credential-free
+receipts are retained under `validation/`; `validation/latest.json` is the
+canonical gate report.
 
 ### What this experiment is
 
@@ -105,7 +115,22 @@ contextual-retrieval-for-user-memory/
 #### 1. Install dependencies
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 3 environment
+uv sync --locked --python 3.12 --extra ch3
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch3]"
+
+cd chapter3/contextual-retrieval-for-user-memory
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
 ```
 
 #### 2. Environment variables
@@ -117,10 +142,12 @@ Create a `.env` file:
 MOONSHOT_API_KEY=your_api_key_here
 ARK_API_KEY=your_api_key_here
 SILICONFLOW_API_KEY=your_api_key_here
+DASHSCOPE_API_KEY=your_dashscope_api_key_here
+# DASHSCOPE_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 OPENAI_API_KEY=your_api_key_here
 
 # Default Provider
-LLM_PROVIDER=kimi  # Options: kimi, doubao, siliconflow, openai
+LLM_PROVIDER=kimi  # Options: dashscope/qwen/bailian, kimi, doubao, siliconflow, openai
 
 # Model Settings
 LLM_MODEL=kimi-k3  # or another model
@@ -363,7 +390,22 @@ contextual-retrieval-for-user-memory/
 #### 1. 安装依赖
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 3 章环境
+uv sync --locked --python 3.12 --extra ch3
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch3]"
+
+cd chapter3/contextual-retrieval-for-user-memory
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
 ```
 
 #### 2. 配置环境变量
@@ -375,10 +417,12 @@ pip install -r requirements.txt
 MOONSHOT_API_KEY=your_api_key_here
 ARK_API_KEY=your_api_key_here
 SILICONFLOW_API_KEY=your_api_key_here
+DASHSCOPE_API_KEY=your_dashscope_api_key_here
+# DASHSCOPE_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 OPENAI_API_KEY=your_api_key_here
 
 # Default Provider
-LLM_PROVIDER=kimi  # Options: kimi, doubao, siliconflow, openai
+LLM_PROVIDER=kimi  # Options: dashscope/qwen/bailian, kimi, doubao, siliconflow, openai
 
 # Model Settings
 LLM_MODEL=kimi-k3  # 或其他模型

@@ -25,10 +25,12 @@ Synthesize across sessions; surface critical connections; proactive help without
 ### Features
 
 - **60 test cases** (20 per layer; 50+ rounds each)  
-- **LLM-as-Judge** for semantic scoring  
-- Banking, insurance, healthcare, travel, retail, …  
-- Interactive, batch, programmatic modes  
-- Detailed reports  
+- **Experiment 6-3 structured LLM-as-Judge**: precision, recall, reasoning,
+  proactivity, plus a hallucination veto; every dimension includes evidence and
+  a concrete boundary-case decision
+- Banking, insurance, healthcare, travel, retail, …
+- Interactive, batch, programmatic modes
+- Detailed reports
 
 ### Quickstart: scored comparison (Experiment 3-1)
 
@@ -60,7 +62,23 @@ Scores are **computed** from `fixtures/system_responses.example.json` (not hand-
 ### Installation
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 3 environment
+uv sync --locked --python 3.12 --extra ch3
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch3]"
+
+cd chapter3/user-memory-evaluation
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # API credentials for LLM judge (Kimi or OpenAI)
 ```
@@ -124,7 +142,28 @@ L3: passport vs travel, coverage vs procedures, cross-session tax/warranty.
 
 **`keyword-recall` (offline):** `reward = (# gold facts in answer) / (# gold facts)`, normalized substring match.
 
-**`llm-judge` (API):** scores retrieval completeness, accuracy, context, proactivity vs criteria.
+**`llm-judge` (API):** the Experiment 6-3 judge reads the authoritative
+conversation source and returns four 1-4 grades (`excellent/good/pass/fail`):
+factual precision, factual recall, reasoning correctness, and proactivity.
+Each grade includes cited evidence and an applied boundary case. A separate
+hallucination verdict is an unconditional zero-score veto. The legacy
+`reward` field is derived from those four grades for existing report callers.
+Task success is deliberately stricter than partial-credit reward: precision,
+recall, and reasoning must each be at least `good` (3/4), and no hallucination
+veto may fire. Proactivity remains diagnostic because a complete direct answer
+does not always need extra advice.
+
+Live structured-rubric check:
+
+```bash
+python validate_rubric.py \
+  --test-id layer1_01_bank_account \
+  --answer 'Your checking account is 4429853327. The direct-deposit routing number is 123006800.' \
+  --output results/live_6_3_layer1.json
+```
+
+Experiments 7-4 and 7-11 use this judge in the end-to-end runner at
+[`chapter7/user-memory-system-evaluation`](../../chapter7/user-memory-system-evaluation/).
 
 ### Configuration
 
@@ -141,7 +180,7 @@ Add YAML under `test_cases/layer*/`. Extend `LLMEvaluator` for custom judges.
 
 ### Requirements / license
 
-Python 3.8+, Kimi or OpenAI key for judge modes, 8GB+ RAM recommended. MIT License.
+Python 3.12 with the root `ch3` extra, Kimi or OpenAI key for judge modes, 8GB+ RAM recommended. MIT License.
 
 ---
 
@@ -181,7 +220,23 @@ python main.py --mode compare --metric keyword-recall
 ### 安装
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 3 章环境
+uv sync --locked --python 3.12 --extra ch3
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch3]"
+
+cd chapter3/user-memory-evaluation
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # LLM Judge 需配置 Kimi 或 OpenAI
 ```
@@ -207,13 +262,14 @@ python main.py --mode batch --responses agent_responses.json
 字段：`test_id`、`category`、`title`、`conversation_histories`、`user_question`、`evaluation_criteria`、`expected_behavior`。
 
 - **`keyword-recall`**：离线关键事实召回  
-- **`llm-judge`**：语义评分（需 API）  
+- **`llm-judge`**：实验 6-3 的结构化 Rubric（需 API）。逐维输出事实精确率、事实召回率、
+  思考正确性和主动性四档成绩、证据与边界案例；另设幻觉一票否决，触发后总分归零。
 
 通过阈值：`reward >= 0.6`。
 
 ### 扩展与要求
 
-在 `test_cases/layer*/` 添加 YAML；可继承 `LLMEvaluator`。Python 3.8+；Judge 模式需 API Key；建议 8GB+ 内存。MIT 许可。
+在 `test_cases/layer*/` 添加 YAML；可继承 `LLMEvaluator`。根目录 `ch3` 安装使用 Python 3.12；Judge 模式需 API Key；建议 8GB+ 内存。MIT 许可。
 
 ---
 

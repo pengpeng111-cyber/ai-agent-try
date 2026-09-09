@@ -1,11 +1,21 @@
 # Context Compression Strategies / 上下文压缩策略对比
 
-> Companion material for *AI Agents in Depth*, Chapter 2 — **Experiment 2-9 ★★★: Comparison of context compression strategies**.  
-> 配套《深入理解 AI Agent》第 2 章 **实验 2-9 ★★★：上下文压缩策略对比**。
+> Companion material for *AI Agents in Depth*, Chapter 2 — **Experiment 2-10 ★★★: Comparison of context compression strategies**.
+> 配套《深入理解 AI Agent》第 2 章 **实验 2-10 ★★★：上下文压缩策略对比**。
 
 ← [Chapter 2 index / 返回第 2 章目录](../README.md)
 
 ---
+
+## Code map
+
+- **Run first:** python experiment.py -s context_aware (or python quickstart.py for the menu).
+- **Start here:** experiment.py::ExperimentRunner controls one strategy comparison.
+- **Core behavior:** agent.py::ResearchAgent records the tool trajectory; compression_strategies.py::ContextCompressor applies the policy.
+- **State / protocol:** AgentTrajectory, ToolCall and CompressionStrategy.
+- **Verifier:** results/ JSON plus token/overflow counters; tests cover malformed tool results.
+- **Experiment variable:** six compression strategies and the context-window budget.
+- **Skip on first pass:** web search provider, streaming UI and plotting helpers.
 
 ## English
 
@@ -55,15 +65,32 @@ This lab implements and compares **6** strategies and their trade-offs.
 ### Installation
 
 ```bash
+# From the repository root: use the shared Chapter 2 environment
+uv sync --locked --python 3.12 --extra ch2
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch2]"
+
 cd chapter2/context-compression
-pip install -r requirements.txt
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # Edit .env with your API keys
 ```
 
 **API keys:**
 
-- `MOONSHOT_API_KEY` — Kimi/Moonshot (required for live runs). Book 实验 2-9 uses Kimi K3 (~1M real window); the demo **caps** the compression/overflow budget at `CONTEXT_WINDOW_SIZE` (default 128K) so overflow/compression is observable. Override model via `MODEL_NAME` or `-m/--model` (e.g. `kimi-k2.5`, `kimi-k3`, `moonshot-v1-128k`).
+- `LLM_PROVIDER` — `kimi` (default), `dashscope`/`qwen`/`bailian`, or `openrouter`.
+- `DASHSCOPE_API_KEY` — Alibaba Cloud Model Studio / Bailian key when using DashScope; default model is `qwen3.7-plus` (set `DASHSCOPE_BASE_URL` for international keys).
+- `MOONSHOT_API_KEY` — Kimi/Moonshot for live runs. Book 实验 2-10 uses Kimi K3 (~1M real window); the demo **caps** the compression/overflow budget at `CONTEXT_WINDOW_SIZE` (default 128K) so overflow/compression is observable. Override model via `MODEL_NAME` or `-m/--model` (e.g. `kimi-k2.5`, `kimi-k3`, `moonshot-v1-128k`).
 - `OPENROUTER_API_KEY` — fallback if Moonshot key unset (`kimi-*` → `moonshotai/kimi-k2`). Unchanged if `MOONSHOT_API_KEY` is set.
 - `SERPER_API_KEY` — web search (optional; mock data if missing)
 
@@ -289,15 +316,32 @@ New task: system prompt in `agent.py`, mock data in `web_tools.py`, tool descrip
 ### 安装
 
 ```bash
+# 在仓库根目录使用统一的第 2 章环境
+uv sync --locked --python 3.12 --extra ch2
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch2]"
+
 cd chapter2/context-compression
-pip install -r requirements.txt
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env
 # 编辑 .env 填入 API Key
 ```
 
 **所需 Key：**
 
-- `MOONSHOT_API_KEY`：Kimi/Moonshot（在线跑必需）。书中实验 2-9 使用 Kimi K3（真实窗口约 1M）；演示通过 `CONTEXT_WINDOW_SIZE`（默认 128K）**故意收紧**溢出/压缩预算以便观察。可用 `MODEL_NAME` 或 `-m/--model` 覆盖（如 `kimi-k2.5`、`kimi-k3`、`moonshot-v1-128k`）。
+- `LLM_PROVIDER`：`kimi`（默认）、`dashscope`/`qwen`/`bailian` 或 `openrouter`。
+- `DASHSCOPE_API_KEY`：使用阿里云百炼 / Model Studio 时的 Key，默认模型 `qwen3.7-plus`（国际区 Key 可设置 `DASHSCOPE_BASE_URL`）。
+- `MOONSHOT_API_KEY`：Kimi/Moonshot（在线跑必需）。书中实验 2-10 使用 Kimi K3（真实窗口约 1M）；演示通过 `CONTEXT_WINDOW_SIZE`（默认 128K）**故意收紧**溢出/压缩预算以便观察。可用 `MODEL_NAME` 或 `-m/--model` 覆盖（如 `kimi-k2.5`、`kimi-k3`、`moonshot-v1-128k`）。
 - `OPENROUTER_API_KEY`：未设置 Moonshot key 时的通用回退（`kimi-*` → `moonshotai/kimi-k2`）。设了 `MOONSHOT_API_KEY` 时行为不变。
 - `SERPER_API_KEY`：联网搜索（可选；缺失则用 mock 数据）
 

@@ -1,9 +1,51 @@
 # Experiment 5-8: Production Log Diagnosis / 实验 5-8：生产日志的智能诊断系统
 
-> Companion lab for *AI Agents in Depth*, Chapter 5 — diagnose trajectories + architecture + PRD → structured report → regression tests → replay → (mock) GitHub Issues.  
-> 《深入理解 AI Agent》第 5 章：诊断 Agent 读轨迹/架构/PRD，定位根因、生成回归测试、重放验证，并（mock）对接 GitHub。
+> Companion lab for *AI Agents in Depth*, Chapter 5 — diagnose trajectories + architecture + PRD → structured report → regression tests → real replay → GitHub Issues through the official MCP server.
+> 《深入理解 AI Agent》第 5 章：诊断 Agent 读轨迹/架构/PRD，定位根因、生成回归测试、真实重放验证，并通过官方 GitHub MCP 创建 Issue。
 
 ← [Chapter 5 index / 返回第 5 章目录](../README.md)
+
+---
+
+## Canonical manuscript experiment / 正文正式实验
+
+The manuscript contract is satisfied by
+[`validation/runs/exp5-8-live-http-mcp-20260730-053403/manifest.json`](validation/runs/exp5-8-live-http-mcp-20260730-053403/manifest.json),
+not by the smaller deterministic demo described later in this README. The
+canonical campaign:
+
+- recorded two trajectories from a real local HTTP subprocess, including raw
+  HTTP results and measured latency;
+- made two live `doubao-seed-1-6-250615` calls to diagnose the failures and
+  generate executable tests tied to trajectory IDs and turn numbers;
+- executed all three generated tests against both HTTP implementations: every
+  test failed on the buggy service and passed after the fix; and
+- called `issue_write(method=create)` on the official
+  `github/github-mcp-server`, creating
+  [Issue #502](https://github.com/bojieli/ai-agent-book/issues/502).
+
+All nine acceptance gates are true and the manifest SHA-256 is
+`68e09e7c8b4fc100e0612a6f81978079c393a822025bfa794b6dda85134a5813`.
+Raw provider calls, live replays, the generated tests, and the credential-free
+MCP receipt are retained beside the manifest.
+
+正文合同由
+[`validation/runs/exp5-8-live-http-mcp-20260730-053403/manifest.json`](validation/runs/exp5-8-live-http-mcp-20260730-053403/manifest.json)
+中的正式活动满足，而不是下文较小的确定性演示。该活动从真实本地 HTTP
+子进程采集带原始响应和实测延迟的轨迹；用真实
+`doubao-seed-1-6-250615` 调用完成诊断和可执行测试生成；让三个测试在有
+缺陷实现上全部失败、修复实现上全部通过；最后通过官方
+`github/github-mcp-server` 的 `issue_write(method=create)` 创建了
+[Issue #502](https://github.com/bojieli/ai-agent-book/issues/502)。九项验收门禁全部为
+`true`，原始模型回执、重放、测试与去凭据 MCP 回执均随 manifest 保留。
+
+The sections below document the compact teaching/CI implementation. Its
+default GitHub sink is intentionally a mock; `--create-issue` selects its live
+MCP branch. Running that legacy path alone is not evidence for the canonical
+experiment.
+
+下文记录的是适合教学和 CI 的小型实现；其 GitHub 默认输出有意采用 mock，
+`--create-issue` 才进入真实 MCP 分支。只运行该旧路径不能作为正式实验完成证据。
 
 ---
 
@@ -51,7 +93,23 @@ data/PRD.md              (product requirements)          ├─► [LLM] diagnos
 ### Run
 
 ```bash
-pip install -r requirements.txt
+# From the repository root: use the shared Chapter 5 environment
+uv sync --locked --python 3.12 --extra ch5
+
+# Activate it before changing directories:
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+# Windows cmd: .venv\Scripts\activate.bat
+
+# pip fallback when uv is not installed:
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/log-diagnosis
+
+# Single-project compatibility path, still supported during migration:
+# python -m pip install -r requirements.txt
+
 cp env.example .env      # OPENAI_API_KEY (default gpt-5.6-luna); or OPENROUTER_API_KEY
 python demo.py           # full pipeline (two real LLM calls)
 ```
@@ -119,7 +177,7 @@ Generated cases must use one of:
 
   ```bash
   export OPENAI_BASE_URL=https://api.moonshot.cn/v1
-  export OPENAI_API_KEY=sk-...
+  export OPENAI_API_KEY=your-openai-api-key
   export OPENAI_MODEL=kimi-k3
   python demo.py
   ```
@@ -133,7 +191,7 @@ Default is mock; `--create-issue` goes live. Implementation in `github_mcp._crea
 
 1. GitHub PAT with `repo` → `.env` `GITHUB_TOKEN`; set `GITHUB_REPO=owner/repo`.
 2. Machine can start official GitHub MCP Server (default Docker `ghcr.io/github/github-mcp-server`); override with `GITHUB_MCP_COMMAND` (token as `GITHUB_PERSONAL_ACCESS_TOKEN`).
-3. `pip install mcp` (this path only).
+3. The root `ch5` extra includes the MCP SDK; the compatibility path above also keeps the old project-local install available.
 4. `python demo.py --create-issue`. Missing token/repo → tip + mock fallback.
 
 ### Limitations
@@ -190,7 +248,23 @@ data/PRD.md              (产品需求)          ├─► [LLM] diagnose()     
 ### 运行
 
 ```bash
-pip install -r requirements.txt
+# 在仓库根目录使用统一的第 5 章环境
+uv sync --locked --python 3.12 --extra ch5
+
+# 切换目录前先激活环境：
+# macOS/Linux：
+source .venv/bin/activate
+# Windows PowerShell：.\.venv\Scripts\Activate.ps1
+# Windows cmd：.venv\Scripts\activate.bat
+
+# 未安装 uv 时可用 pip 兜底：
+# python -m pip install -e ".[ch5]"
+
+cd chapter5/log-diagnosis
+
+# 迁移期间仍支持单项目兼容路径：
+# python -m pip install -r requirements.txt
+
 cp env.example .env      # 填入 OPENAI_API_KEY（模型默认 gpt-5.6-luna）；未配置时设 OPENROUTER_API_KEY 自动改走 OpenRouter
 python demo.py           # 完整流程（两次真实 LLM 调用）
 ```
@@ -257,7 +331,7 @@ Agent 生成的测试用例须使用以下断言之一，框架可自动求值�
 - **换供应商**：本项目用官方 `openai` SDK，只需再设 `OPENAI_BASE_URL` 指向兼容 OpenAI 接口的服务（如 Moonshot / 火山方舟 / 本地 vLLM），配合该供应商的 `OPENAI_API_KEY` 与 `OPENAI_MODEL` 即可，无需改代码。例如：
   ```bash
   export OPENAI_BASE_URL=https://api.moonshot.cn/v1
-  export OPENAI_API_KEY=sk-...          # 该供应商的 Key
+  export OPENAI_API_KEY=your-openai-api-key          # 该供应商的 Key
   export OPENAI_MODEL=kimi-k3
   python demo.py
   ```
@@ -276,7 +350,7 @@ GitHub MCP Server，逐个调用其 `create_issue` 工具，传入 `build_issue(
 2. 确保本机可启动官方 GitHub MCP Server。默认启动命令用官方 Docker 镜像
    `ghcr.io/github/github-mcp-server`；可用 `GITHUB_MCP_COMMAND` 覆盖为任意暴露
    `create_issue` 工具的 MCP Server（token 经 `GITHUB_PERSONAL_ACCESS_TOKEN` 注入其环境）。
-3. `pip install mcp`（仅此路径需要；mock/自检不需要）。
+3. 根目录 `ch5` extra 已包含 MCP SDK；上方兼容路径仍保留旧版单项目安装。
 4. 运行 `python demo.py --create-issue`。缺少 `GITHUB_TOKEN` / `GITHUB_REPO` 时会打印提示并
    自动回退 mock，避免误联网。
 

@@ -1,34 +1,63 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 40 820 460" width="820" height="460" style="background:#ffffff">
-<defs><marker id="ah" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#333333" /></marker><marker id="ah-light" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#999999" /></marker></defs>
-<rect x="80" y="60" width="500" height="380" rx="8" fill="#ffffff" stroke="#333333" stroke-width="2" stroke-dasharray="8,4" />
-<text x="330" y="82" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="bold">while not done:</text>
-<rect x="120" y="100" width="420" height="60" rx="6" fill="#e8e8e8" stroke="#333333" stroke-width="2" />
-<text x="130" y="115" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="bold">① Suy nghĩ (Reasoning)</text>
-<rect x="130" y="125" width="400" height="28" rx="4" fill="#f5f5f5" stroke="#333333" stroke-width="2" />
-<text x="140" y="0" font-family="'Courier New', Courier, monospace" font-size="10" fill="#333333" text-anchor="start" dominant-baseline="central"><tspan x="140" dy="133.6">"Đang phân tích kết quả tìm kiếm... Thông tin chưa</tspan><tspan x="140" dy="10.8">đầy đủ, cần tìm kiếm thêm"</tspan></text>
-<rect x="120" y="175" width="420" height="60" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2" />
-<text x="130" y="190" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="bold">② Hành động (Acting)</text>
-<rect x="130" y="200" width="400" height="28" rx="4" fill="#f5f5f5" stroke="#333333" stroke-width="2" />
-<text x="140" y="215" font-family="'Courier New', Courier, monospace" font-size="14" fill="#333333" text-anchor="start" dominant-baseline="central">web_search("Agent RL training techniques 2025")</text>
-<line x1="330" y1="162" x2="330" y2="173" stroke="#333333" stroke-width="2" marker-end="url(#ah)" />
-<rect x="120" y="250" width="420" height="60" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2" />
-<text x="130" y="265" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="bold">③ Quan sát (Observing)</text>
-<rect x="130" y="275" width="400" height="28" rx="4" fill="#f5f5f5" stroke="#333333" stroke-width="2" />
-<text x="140" y="290" font-family="'Courier New', Courier, monospace" font-size="14" fill="#333333" text-anchor="start" dominant-baseline="central">tool_result: "Found 3 relevant papers..."</text>
-<line x1="330" y1="237" x2="330" y2="248" stroke="#333333" stroke-width="2" marker-end="url(#ah)" />
-<path d="M 540,280 Q 500.0,200.0 540,120" fill="none" stroke="#999999" stroke-width="2" marker-end="url(#ah-light)" />
-<text x="520.0" y="190.0" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">Tiếp tục chu kỳ</text>
-<rect x="610" y="60" width="190" height="190" rx="8" fill="#ffffff" stroke="#333333" stroke-width="2" stroke-dasharray="8,4" />
-<text x="622" y="85.88" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="start" dominant-baseline="central" font-weight="bold">Điều kiện thoát</text>
-<text x="620" y="0" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal"><tspan x="620" dy="103.16">① Nhiệm vụ đã hoàn</tspan><tspan x="620" dy="17.28">thành</tspan></text>
-<text x="620" y="137.72" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">② Gọi final_answer</text>
-<text x="620" y="0" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal"><tspan x="620" dy="155">③ Trở về mà không</tspan><tspan x="620" dy="17.28">gọi công cụ</tspan></text>
-<text x="620" y="189.56" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">④ Đạt số vòng tối đa</text>
-<text x="620" y="0" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal"><tspan x="620" dy="206.84">⑤ Số lỗi vượt quá</tspan><tspan x="620" dy="17.28">giới hạn</tspan></text>
-<rect x="80" y="360" width="500" height="70" rx="6" fill="#d0d0d0" stroke="#333333" stroke-width="2" />
-<text x="330" y="373.28" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15.33" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="bold">Ví dụ thực thi thực tế: Sửa mã SWE-bench</text>
-<text x="330" y="0" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13.41" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal"><tspan x="330" dy="388.8">Tìm kiếm mã → Xác định vị trí bug → Chỉnh sửa tệp → Chạy kiểm tra →</tspan><tspan x="330" dy="14.48">Sửa lỗi → Chỉnh sửa lại → Kiểm tra đạt → Hoàn thành</tspan></text>
-<text x="330" y="417.76" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13.41" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">(Lặp lại 5 lần, gọi công cụ 12 lần)</text>
-<line x1="330" y1="312" x2="330" y2="358" stroke="#333333" stroke-width="2" marker-end="url(#ah)" />
-<text x="330.0" y="325.0" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="middle">done = True</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 40 820 530" width="820" height="530" style="background:#ffffff">
+<title>Hình 1-5: Kiến trúc &quot;Model is Agent&quot; - lệnh gọi công cụ gốc</title>
+<desc>LLM gọi các công cụ gốc như web_search và code_interpreter trong một vòng khép kín do Harness phía máy chủ thực thi. Đầu vào của người dùng và đầu ra cuối cùng nằm ngoài vòng đó; bên trong, suy nghĩ, hành động và quan sát tạo thành vòng lặp ReAct.</desc>
+<defs><marker id="ah" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#333333"/></marker><marker id="ah-light" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="8" refX="12" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#999999"/></marker></defs>
+
+<rect x="260" y="70" width="300" height="100" rx="6" fill="#d0d0d0" stroke="#333333" stroke-width="2"/>
+<text x="410" y="100" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="20" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="bold">LLM（Kimi K3 / GPT-5.6）</text>
+<text x="410" y="130" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">Năng lực Agent gốc sau huấn luyện RL</text>
+
+<rect x="620" y="70" width="180" height="230" rx="8" fill="none" stroke="#333333" stroke-width="2" stroke-dasharray="8,4"/>
+<text x="632" y="88" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="start" dominant-baseline="central" font-weight="bold">Công cụ gốc</text>
+<rect x="635" y="105" width="150" height="50" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
+<text x="710" y="130" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">web_search</text>
+<rect x="635" y="170" width="150" height="50" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
+<text x="710" y="195" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">code_interpreter</text>
+<rect x="635" y="235" width="150" height="50" rx="6" fill="#ffffff" stroke="#333333" stroke-width="2"/>
+<text x="710" y="260" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Thêm công cụ...</text>
+<line x1="560" y1="120" x2="633" y2="130" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+<line x1="633" y1="195" x2="560" y2="145" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<path d="M 570,308 Q 600,240 548,172" fill="none" stroke="#999999" stroke-width="2" stroke-dasharray="8,4" marker-end="url(#ah-light)"/>
+<text x="568" y="250" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#666666" text-anchor="end" dominant-baseline="central" font-weight="bold">Tín hiệu huấn luyện RL</text>
+
+<rect x="25" y="235" width="230" height="55" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
+<text x="140" y="252.9" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15.5" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Người dùng: tìm xu hướng giá</text>
+<text x="140" y="273.7" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15.5" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Bitcoin trong tháng qua</text>
+
+<rect x="15" y="310" width="790" height="170" rx="8" fill="none" stroke="#333333" stroke-width="2" stroke-dasharray="8,4"/>
+<text x="410" y="328" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="bold">Vòng lặp ReAct (Harness phía máy chủ thực thi khép kín)</text>
+
+<line x1="140" y1="292" x2="140" y2="380" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<text x="440" y="350" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="14" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">mang kết quả quan sát sang vòng tiếp theo</text>
+<path d="M 680,382 L 680,366 L 200,366 L 200,382" fill="none" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<rect x="40" y="384" width="200" height="76" rx="6" fill="#e8e8e8" stroke="#333333" stroke-width="2"/>
+<text x="140" y="412" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11.5" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Suy nghĩ: cần tìm dữ liệu thời gian</text>
+<text x="140" y="433" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11.5" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">thực, rồi phân tích bằng mã</text>
+<line x1="242" y1="422" x2="298" y2="422" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<rect x="300" y="384" width="220" height="76" rx="6" fill="#f0f0f0" stroke="#333333" stroke-width="2"/>
+<text x="410" y="404" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Vòng 1: gọi web_search</text>
+<text x="410" y="424" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">&quot;BTC price last month&quot;</text>
+<text x="410" y="444" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="13" fill="#666666" text-anchor="middle" dominant-baseline="central" font-weight="normal">Vòng 2: code_interpreter</text>
+<line x1="522" y1="422" x2="578" y2="422" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+
+<rect x="580" y="384" width="200" height="76" rx="6" fill="#e8e8e8" stroke="#333333" stroke-width="2"/>
+<text x="680" y="412" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Kết quả: [dữ liệu giá]</text>
+<text x="680" y="433" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="16" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">$67,230 → $71,450</text>
+
+<line x1="140" y1="462" x2="140" y2="496" stroke="#333333" stroke-width="2" marker-end="url(#ah)"/>
+<rect x="25" y="500" width="230" height="55" rx="6" fill="#d0d0d0" stroke="#333333" stroke-width="2"/>
+<text x="140" y="517.9" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">Đầu ra cuối: báo cáo phân tích</text>
+<text x="140" y="538.7" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="15" fill="#333333" text-anchor="middle" dominant-baseline="central" font-weight="normal">kỹ thuật + biểu đồ</text>
+
+<rect x="15" y="70" width="230" height="120" rx="8" fill="none" stroke="#333333" stroke-width="2" stroke-dasharray="8,4"/>
+<text x="27" y="80.8" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#666666" text-anchor="start" dominant-baseline="central" font-weight="bold">Khác biệt so với framework truyền</text>
+<text x="27" y="95.2" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11" fill="#666666" text-anchor="start" dominant-baseline="central" font-weight="bold">thống</text>
+<text x="30" y="115.5" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11.5" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">✓ Harness phía máy chủ lo điều phối</text>
+<text x="30" y="135.5" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11.5" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">✓ Client không phải viết vòng lặp</text>
+<text x="30" y="150.5" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11.5" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">ReAct</text>
+<text x="30" y="170.5" font-family="Arial, 'Helvetica Neue', Helvetica, 'PingFang SC', 'Microsoft YaHei', sans-serif" font-size="11.5" fill="#333333" text-anchor="start" dominant-baseline="central" font-weight="normal">✓ Mô hình tự quyết định gọi công cụ</text>
 </svg>

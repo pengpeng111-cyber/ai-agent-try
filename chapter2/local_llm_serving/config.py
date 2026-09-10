@@ -30,6 +30,13 @@ VLLM_SERVER_CONFIG = {
 # OpenAI Client Configuration (for connecting to vLLM)
 OPENAI_API_BASE = f"http://{VLLM_HOST}:{VLLM_PORT}/v1"
 OPENAI_API_KEY = "EMPTY"  # vLLM doesn't require a real key
+OPENAI_API_MODEL_NAME = os.getenv("OPENAI_API_MODEL_NAME", "Qwen/Qwen3-0.6B")
+
+# MSG_Model local backend (OpenAI-compatible endpoint)
+# base_url 给到 /api/msg_qwen3，OpenAI 客户端会自动追加 /chat/completions
+MSG_MODEL_API_BASE = os.getenv("MSG_MODEL_API_BASE", "http://xxx:8000/api/qwen3")
+MSG_MODEL_API_KEY = os.getenv("MSG_MODEL_API_KEY", "samsung")
+MSG_MODEL_NAME = os.getenv("MSG_MODEL_NAME", "MSG_Model")
 
 # Tool Configuration
 ENABLE_WEATHER_TOOL = True
@@ -39,3 +46,6 @@ ENABLE_SEARCH_TOOL = True
 # Logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_FILE = Path("logs") / "vllm_tool_demo.log"
+
+# Session Management
+SESSIONS_DIR = Path(__file__).parent / "sessions"

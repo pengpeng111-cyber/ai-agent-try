@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Any, Optional, Tuple
 from openai import OpenAI
 from tools import ToolRegistry
-from config import OPENAI_API_BASE, OPENAI_API_KEY, LOG_LEVEL
+from config import OPENAI_API_BASE, OPENAI_API_KEY, MODEL_NAME, LOG_LEVEL
 
 # Set up logging
 logging.basicConfig(level=LOG_LEVEL)
@@ -20,21 +20,24 @@ logger = logging.getLogger(__name__)
 class VLLMToolAgent:
     """Agent that uses vLLM for tool calling with Qwen3 model"""
     
-    def __init__(self, api_base: str = OPENAI_API_BASE, api_key: str = OPENAI_API_KEY):
+    def __init__(self, api_base: str = OPENAI_API_BASE, api_key: str = OPENAI_API_KEY,
+                 model: str = MODEL_NAME):
         """
-        Initialize the agent with vLLM server connection
+        Initialize the agent with the model server connection
         
         Args:
-            api_base: Base URL for vLLM server
-            api_key: API key (not required for vLLM, use "EMPTY")
+            api_base: Base URL for the model server (OpenAI-compatible)
+            api_key: API key
+            model: Model name sent in API requests
         """
         self.client = OpenAI(
             api_key=api_key,
             base_url=api_base
         )
+        self.model = model
         self.tool_registry = ToolRegistry()
         self.conversation_history = []
-        logger.info(f"Initialized VLLMToolAgent with server at {api_base}")
+        logger.info(f"Initialized VLLMToolAgent with server at {api_base}, model={model}")
     
     def _format_system_prompt_with_tools(self) -> str:
         """
@@ -245,7 +248,7 @@ After receiving tool results, use them to provide a comprehensive answer to the 
             
             # Call the model
             response = self.client.chat.completions.create(
-                model="Qwen/Qwen3-0.6B",
+                model=self.model,
                 messages=messages,
                 tools=tools,
                 tool_choice="auto" if use_tools else None,
@@ -376,7 +379,7 @@ After receiving tool results, use them to provide a comprehensive answer to the 
             
             # Stream response from model
             stream_response = self.client.chat.completions.create(
-                model="Qwen/Qwen3-0.6B",
+                model=self.model,
                 messages=messages,
                 tools=tools,
                 tool_choice="auto" if use_tools else None,

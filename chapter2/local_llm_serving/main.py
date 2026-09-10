@@ -10,6 +10,7 @@ import os
 import sys
 import platform
 import logging
+import datetime
 from typing import Optional, Dict, Any, List
 import json
 
@@ -31,7 +32,7 @@ class ToolCallingAgent:
         Initialize with automatic backend detection
         
         Args:
-            backend: Force a specific backend ('vllm', 'ollama', or None for auto)
+            backend: Force a specific backend ('vllm', 'ollama', 'msg_model', or None for auto)
         """
         self.agent = None
         self.backend_type = backend or self._detect_best_backend()
@@ -70,6 +71,8 @@ class ToolCallingAgent:
         """Initialize the selected backend"""
         if self.backend_type == "vllm":
             self._init_vllm()
+        elif self.backend_type == "msg_model":
+            self._init_msg_model()
         else:
             self._init_ollama()
     
@@ -86,7 +89,7 @@ class ToolCallingAgent:
                 response = requests.get(server_url, timeout=1)
                 if response.status_code != 200:
                     raise ConnectionError("vLLM server not responding")
-            except Exception:
+            except:
                 # Try to start the server
                 logger.info("Starting vLLM server...")
                 from server import VLLMServer
@@ -95,11 +98,12 @@ class ToolCallingAgent:
             
             # Initialize vLLM agent
             from agent import VLLMToolAgent
-            from config import OPENAI_API_BASE, OPENAI_API_KEY
+            from config import OPENAI_API_BASE, OPENAI_API_KEY, OPENAI_API_MODEL_NAME
             
             self.agent = VLLMToolAgent(
                 api_base=OPENAI_API_BASE,
-                api_key=OPENAI_API_KEY
+                api_key=OPENAI_API_KEY,
+                model=OPENAI_API_MODEL_NAME
             )
             logger.info("✅ vLLM agent initialized")
             
@@ -109,6 +113,17 @@ class ToolCallingAgent:
             self.backend_type = "ollama"
             self._init_ollama()
     
+    def _init_msg_model(self):
+        """Initialize MSG_Model local backend (OpenAI-compatible endpoint)"""
+        from agent import VLLMToolAgent
+        from config import MSG_MODEL_API_BASE, MSG_MODEL_API_KEY, MSG_MODEL_NAME
+        self.agent = VLLMToolAgent(
+            api_base=MSG_MODEL_API_BASE,
+            api_key=MSG_MODEL_API_KEY,
+            model=MSG_MODEL_NAME
+        )
+        logger.info("✅ MSG_Model agent initialized")
+
     def _init_ollama(self):
         """Initialize Ollama backend"""
         try:
@@ -122,7 +137,7 @@ class ToolCallingAgent:
                 available_models = []
                 if hasattr(models_response, 'models'):
                     available_models = [m.model for m in models_response.models]
-                
+                    logger.info(f"available_models: {available_models}")
                 if not available_models:
                     logger.error("No Ollama models installed")
                     logger.info("Install a model with: ollama pull qwen3:0.6b")
@@ -186,6 +201,59 @@ class ToolCallingAgent:
         """Reset conversation history"""
         if hasattr(self.agent, 'reset_conversation'):
             self.agent.reset_conversation()
+
+    def _summarize_name(self, history: List[Dict[str, Any]]) -> str:
+        """Summarize a conversation history into a short display name via the LLM.
+
+        Uses a snapshot/restore approach so the summarization call does not
+        pollute the current conversation history. Falls back to a heuristic
+        name when the model call fails or returns nothing usable.
+        """
+        # Build a short transcript from user/assistant text only
+        lines = []
+        for msg in history:
+            role = msg.get("role", "")
+            content = str(msg.get("content", "")).strip()
+            if role in ("user", "assistant") and content:
+                lines.append(f"{role}: {content[:120]}")
+            if len(lines) >= 12:
+                break
+        if not lines:
+            return ""
+
+        transcript = "\n".join(lines)
+        prompt = (
+            "请用不超过12个字的中文短语概括以下对话的主题。"
+            "只输出短语本身，不要标点、解释或引号。\n"
+            f"对话：\n{transcript}"
+        )
+
+        # Snapshot the current history, summarize in isolation, then restore
+        saved_history = self.agent.conversation_history
+        self.agent.conversation_history = []
+        try:
+            resp = self.agent.chat(prompt, use_tools=False, stream=False)
+        except Exception as e:
+            logger.warning(f"Session name summarization failed: {e}")
+            resp = None
+        finally:
+            self.agent.conversation_history = saved_history
+
+        name = (resp or "").strip().strip('"\'“”‘’ ').strip()
+        # Strip common prefixes that some models add
+        for prefix in ("主题", "名称", "标题"):
+            if name.startswith(prefix):
+                name = name[len(prefix):].lstrip(" ：:").strip()
+        if name:
+            return name[:30]
+
+        # Fallback: first user message
+        for msg in history:
+            if msg.get("role") == "user":
+                fallback = str(msg.get("content", "")).strip().replace("\n", " ")
+                if fallback:
+                    return fallback[:24]
+        return ""
 
 
 def get_sample_tasks() -> List[Dict[str, str]]:
@@ -337,6 +405,29 @@ def run_single_task(agent: ToolCallingAgent, task: str, stream: bool = True):
         logger.exception("Task execution failed")
 
 
+def _persist_current(sm, agent, current_session_id, reason):
+    """Persist the current conversation into the active session (upsert).
+
+    Returns the session id that now holds the conversation, or None when there
+    is no active session / no history to persist. If the active session file
+    has been removed (e.g. via /delete), a new session is created instead.
+    """
+    if not current_session_id:
+        return None
+    history = agent.agent.conversation_history
+    if not history:
+        return None
+    backend = agent.backend_type
+    if sm.update(current_session_id, history, backend=backend):
+        sname = (sm.get(current_session_id) or {}).get("name", "(unnamed)")
+        print(f"💾 Updated current session: {sname} (ID: {current_session_id}) · {reason}")
+        return current_session_id
+    name = agent._summarize_name(history) or datetime.datetime.now().strftime("Session %Y-%m-%d %H:%M")
+    new_id = sm.create(history=history, name=name, backend=backend)
+    print(f"⚠️ Current session file missing; saved as new: {name} (ID: {new_id}) · {reason}")
+    return new_id
+
+
 def interactive_mode(agent: ToolCallingAgent, stream: bool = True):
     """Run interactive chat mode with optional streaming"""
     print("\n" + "="*60)
@@ -356,13 +447,23 @@ def interactive_mode(agent: ToolCallingAgent, stream: bool = True):
     
     print("\n💡 Commands:")
     print("  /reset      - Reset conversation")
+    print("  /new        - Save current conversation as a new session (reset)")
+    print("  /save       - Save current conversation as a session (keep chatting)")
+    print("  /sessions   - List saved sessions and switch to one")
+    print("  /delete     - Delete a saved session (pick from list)")
     print("  /tools      - Show available tools")
     print("  /samples    - Show sample tasks")
     print("  /sample <n> - Run sample task number n")
+    print("  /history    - Show conversation history")
     print("  /stream     - Toggle streaming mode")
     print("  /help       - Show this help")
     print("  /exit       - Exit the program")
     print("-"*60)
+
+    # Session management
+    from session_manager import SessionManager
+    sm = SessionManager()
+    current_session_id: Optional[str] = None
     
     streaming_enabled = stream
     
@@ -380,6 +481,7 @@ def interactive_mode(agent: ToolCallingAgent, stream: bool = True):
             
             elif user_input.lower() == "/reset":
                 agent.reset_conversation()
+                current_session_id = None
                 print("✅ Conversation reset")
                 continue
             
@@ -430,9 +532,14 @@ def interactive_mode(agent: ToolCallingAgent, stream: bool = True):
             elif user_input.lower() == "/help":
                 print("\n💡 Commands:")
                 print("  /reset      - Reset conversation")
+                print("  /new        - Save current conversation as a new session (reset)")
+                print("  /save       - Save current conversation as a session (keep chatting)")
+                print("  /sessions   - List saved sessions and switch to one")
+                print("  /delete     - Delete a saved session (pick from list)")
                 print("  /tools      - Show available tools")
                 print("  /samples    - Show sample tasks")
                 print("  /sample <n> - Run sample task number n")
+                print("  /history    - Show conversation history")
                 print("  /stream     - Toggle streaming mode")
                 print("  /help       - Show this help")
                 print("  /exit       - Exit the program")
@@ -441,6 +548,140 @@ def interactive_mode(agent: ToolCallingAgent, stream: bool = True):
             elif user_input.lower() == "/stream":
                 streaming_enabled = not streaming_enabled
                 print(f"✅ Streaming {'enabled' if streaming_enabled else 'disabled'}")
+                continue
+            
+            elif user_input.lower() == "/history":
+                history = agent.agent.conversation_history
+                if not history:
+                    print("\n📭 Conversation history is empty")
+                    continue
+                print(f"\n📚 Conversation History ({len(history)} messages):")
+                print("-" * 60)
+                print(history)
+                print("-" * 60)
+                continue
+
+            elif user_input.lower() == "/new":
+                history = agent.agent.conversation_history
+                if not history:
+                    print("\n📭 Conversation is empty - nothing to save")
+                    continue
+                print("\n⏳ Summarizing conversation for a session name...")
+                name = agent._summarize_name(history)
+                if not name:
+                    name = datetime.datetime.now().strftime("Session %Y-%m-%d %H:%M")
+                session_id = sm.create(
+                    history=history,
+                    name=name,
+                    backend=agent.backend_type
+                )
+                agent.reset_conversation()
+                current_session_id = None
+                print(f"✅ Saved session: {name}")
+                print(f"   ID: {session_id}")
+                print("✅ Conversation reset - starting fresh")
+                continue
+
+            elif user_input.lower() == "/save":
+                history = agent.agent.conversation_history
+                if not history:
+                    print("\n📭 Conversation is empty - nothing to save")
+                    continue
+                if current_session_id:
+                    new_sid = _persist_current(sm, agent, current_session_id, "手动保存")
+                    if new_sid is not None:
+                        current_session_id = new_sid
+                    continue
+                print("\n⏳ Summarizing conversation for a session name...")
+                name = agent._summarize_name(history)
+                if not name:
+                    name = datetime.datetime.now().strftime("Session %Y-%m-%d %H:%M")
+                session_id = sm.create(
+                    history=history,
+                    name=name,
+                    backend=agent.backend_type
+                )
+                current_session_id = session_id
+                print(f"✅ Saved session: {name}")
+                print(f"   ID: {session_id}")
+                print("💬 Conversation kept - continue chatting")
+                continue
+
+            elif user_input.lower() == "/sessions":
+                sessions = sm.list()
+                if not sessions:
+                    print("\n📭 No saved sessions yet. Use /new to save the current conversation.")
+                    continue
+                print(f"\n📚 Saved Sessions ({len(sessions)}):")
+                for i, s in enumerate(sessions, 1):
+                    marker = "  ← current" if s["id"] == current_session_id else ""
+                    updated = s.get("updated_at", "")[:16].replace("T", " ")
+                    print(f"   {i}. {s['name']}  ({s['message_count']} msgs)  {updated}{marker}")
+                print("   💡 Enter a number to switch, or 'q' to cancel")
+                try:
+                    choice = input("👤 Switch to session: ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    print("\nCancelled")
+                    continue
+                if choice.lower() in ("q", "quit", ""):
+                    print("Cancelled")
+                    continue
+                try:
+                    num = int(choice)
+                except ValueError:
+                    print("❌ Invalid number")
+                    continue
+                if not (1 <= num <= len(sessions)):
+                    print(f"❌ Invalid number. Choose between 1 and {len(sessions)}")
+                    continue
+                target = sessions[num - 1]
+                current_history = agent.agent.conversation_history
+                if current_history and target["id"] != current_session_id:
+                    print(f"   ⚠️  Current conversation has {len(current_history)} messages that will be overwritten (use /new to save first)")
+                agent.reset_conversation()
+                loaded = sm.load_history(target["id"])
+                if loaded is not None:
+                    agent.agent.conversation_history = loaded
+                    current_session_id = target["id"]
+                    print(f"✅ Switched to session: {target['name']}")
+                else:
+                    print(f"❌ Failed to load session: {target['name']}")
+                continue
+
+            elif user_input.lower() == "/delete":
+                sessions = sm.list()
+                if not sessions:
+                    print("\n📭 No saved sessions to delete")
+                    continue
+                print(f"\n📚 Saved Sessions ({len(sessions)}):")
+                for i, s in enumerate(sessions, 1):
+                    marker = "  ← current" if s["id"] == current_session_id else ""
+                    updated = s.get("updated_at", "")[:16].replace("T", " ")
+                    print(f"   {i}. {s['name']}  ({s['message_count']} msgs)  {updated}{marker}")
+                print("   💡 Enter a number to delete, or 'q' to cancel")
+                try:
+                    choice = input("👤 Delete session: ").strip()
+                except (EOFError, KeyboardInterrupt):
+                    print("\nCancelled")
+                    continue
+                if choice.lower() in ("q", "quit", ""):
+                    print("Cancelled")
+                    continue
+                try:
+                    num = int(choice)
+                except ValueError:
+                    print("❌ Invalid number")
+                    continue
+                if not (1 <= num <= len(sessions)):
+                    print(f"❌ Invalid number. Choose between 1 and {len(sessions)}")
+                    continue
+                target = sessions[num - 1]
+                if sm.delete(target["id"]):
+                    if target["id"] == current_session_id:
+                        current_session_id = None
+                    print(f"🗑️  Deleted session: {target['name']}")
+                else:
+                    print(f"❌ Failed to delete session: {target['name']}")
                 continue
             
             # Process user input
@@ -504,6 +745,10 @@ def interactive_mode(agent: ToolCallingAgent, stream: bool = True):
                 response = agent.chat(user_input, stream=False)
                 
                 print(f"🤖 Assistant: {response}")
+
+            new_sid = _persist_current(sm, agent, current_session_id, "自动持久化")
+            if new_sid is not None:
+                current_session_id = new_sid
             
         except KeyboardInterrupt:
             print("\n\n👋 Goodbye!")
@@ -533,7 +778,7 @@ def main():
     )
     parser.add_argument(
         "--backend",
-        choices=["vllm", "ollama", "auto"],
+        choices=["vllm", "ollama", "msg_model", "auto"],
         default="auto",
         help="Backend to use (default: auto-detect)"
     )
